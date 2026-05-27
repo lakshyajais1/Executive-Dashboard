@@ -37,7 +37,6 @@ A unified analytics platform with **5 dedicated modules**, each answering one co
 | **Customer** | Who are we acquiring, retaining, and losing? |
 | **Engagement** | How are users interacting with the product? |
 
-[See dashboard prototypes →](./dashboards/)
 
 ---
 
@@ -46,12 +45,12 @@ A unified analytics platform with **5 dedicated modules**, each answering one co
 ### 1. Metric Reconciliation Across 4 Platforms
 Each platform defines "conversion," "click," and "revenue" differently. I worked with the marketing team to define 50+ KPIs end-to-end — locking the formula, source platform, and edge cases for every metric — so leadership stops debating "which number is right."
 
-[See full metric definitions →](./metric-definitions/)
+
 
 ### 2. Fallback Logic for Partial Integrations
 Not every client brand connects every platform. Instead of showing broken cards or zero values, I designed a fallback system: cards render meaningful states (e.g., "Not connected" with setup CTA) based on which sources are available. This was a key reliability decision that made the dashboard trustworthy across clients with different integration setups.
 
-[See fallback logic spec →](./logic/fallback-system.md)
+
 
 ### 3. Full-Funnel View Across Channels
 Designed the Impression → Click → Landing → Engaged → Conversion flow, with multi-channel breakdowns across Google Ads, Meta, TikTok, LinkedIn, and Snapchat. Lets teams pinpoint drop-off stages and realloca
