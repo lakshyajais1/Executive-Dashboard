@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>nyx.today — Customer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#090812;--bg-card:#100E1F;--bg-elevated:#161328;--bg-header:#1A1730;
+  --border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,0.14);
+  --text:#F0EEF8;--text-2:#8B87A8;--text-3:#5A566E;
+  --green:#00C896;--green-dim:rgba(0,200,150,0.12);
+  --red:#FF4D6A;--amber:#F5A623;--amber-dim:rgba(245,166,35,0.1);
+  --purple:#7B6EF6;--blue:#3D9CF5;--pink:#F472B6;
+  --r:10px;--r-sm:6px;--r-lg:14px;
+}
+body{
+  background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);
+  min-height:100vh;padding:24px;
+  background-image:
+    radial-gradient(ellipse 60% 35% at 85% -5%,rgba(244,114,182,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 30% at 5% 15%,rgba(123,110,246,0.05) 0%,transparent 60%);
+}
+button,select{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;outline:none}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#7B6EF6,#F472B6);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff}
+.brand-name{font-size:17px;font-weight:700;letter-spacing:-0.3px}
+.brand-sub{font-size:11px;color:var(--text-2);margin-top:1px}
+.tab-nav{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);padding:4px;gap:2px;flex-wrap:wrap}
+.tab-btn{padding:7px 13px;border-radius:var(--r-sm);font-size:12px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s;white-space:nowrap}
+.tab-btn.active{background:var(--pink);color:#fff;box-shadow:0 2px 14px rgba(244,114,182,0.35)}
+.tab-btn:hover:not(.active):not(:disabled){color:var(--text)}
+.tab-btn:disabled{opacity:0.35;cursor:not-allowed}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;padding:5px 12px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
+/* ── PERIOD ── */
+.period-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.period-picker{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);padding:4px;gap:2px}
+.period-btn{padding:7px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s;white-space:nowrap}
+.period-btn.active{background:var(--pink);color:#fff;box-shadow:0 2px 12px rgba(244,114,182,0.35)}
+.period-btn:hover:not(.active){color:var(--text)}
+.period-badge{font-size:11px;color:var(--text-2);background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;padding:4px 12px}
+.period-badge span{color:var(--pink);font-weight:600}
+
+/* ── SEC LABEL ── */
+.sec-lbl{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;flex-wrap:wrap;gap:8px}
+.sec-lbl-left{display:flex;align-items:center;gap:7px}
+.sec-dot{width:7px;height:7px;border-radius:2px}
+.sec-title{font-size:13px;font-weight:600}
+.sec-sub-lbl{font-size:10px;color:var(--text-3)}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
+.kpi-grid-2{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+@media(max-width:1100px){.kpi-grid,.kpi-grid-2{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.kpi-grid,.kpi-grid-2{grid-template-columns:1fr 1fr}}
+
+.kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.2s}
+.kpi-card:hover{transform:translateY(-2px);border-color:var(--border-bright);box-shadow:0 8px 28px rgba(0,0,0,0.3)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r-lg) var(--r-lg) 0 0;opacity:0;transition:opacity 0.2s}
+.kpi-card:hover::before{opacity:1}
+.kpi-card.up::before{background:linear-gradient(90deg,var(--green),transparent)}
+.kpi-card.warn::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.kpi-card.down::before{background:linear-gradient(90deg,var(--red),transparent)}
+.kpi-card.new-metric{background:#0A2420;border-color:var(--green)}
+.kpi-card.new-metric::before{background:linear-gradient(90deg,var(--green),transparent);opacity:1}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.kpi-label{font-size:10px;color:var(--text-2);font-weight:500;line-height:1.4}
+.kpi-card.new-metric .kpi-label{color:rgba(0,200,150,0.8)}
+.kpi-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.kpi-value{font-size:22px;font-weight:700;letter-spacing:-0.5px;line-height:1;margin-bottom:5px}
+.kpi-delta{font-size:11px;font-weight:500;margin-bottom:2px}
+.kpi-vs{font-size:9px;color:var(--text-3)}
+.kpi-new-tag{font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(0,200,150,0.15);color:var(--green);font-weight:600;display:inline-block;margin-top:4px}
+.delta-up{color:var(--green)}.delta-warn{color:var(--amber)}.delta-down{color:var(--red)}
+.drill-hint{position:absolute;bottom:9px;right:11px;font-size:9px;color:var(--text-3);opacity:0;transition:opacity 0.2s}
+.kpi-card:hover .drill-hint{opacity:1}
+
+/* ── SECTION CARD ── */
+.sec-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:14px;overflow:hidden;transition:border-color 0.2s}
+.sec-card:hover{border-color:var(--border-bright)}
+.sec-card-hdr{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.01)}
+.sec-card-title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+.sec-card-sub{font-size:10px;color:var(--text-2);margin-top:2px}
+.sec-card-body{padding:18px 20px}
+
+/* ── CAC BY SOURCE ── */
+.cac-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:800px){.cac-grid{grid-template-columns:1fr}}
+.cac-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;transition:all 0.2s;position:relative;overflow:hidden}
+.cac-card:hover{border-color:var(--border-bright);transform:translateY(-1px)}
+.cac-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r-lg) var(--r-lg) 0 0}
+.cac-source{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.cac-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.cac-name{font-size:13px;font-weight:700}
+.cac-share{font-size:10px;color:var(--text-3);margin-top:1px}
+.cac-value{font-size:26px;font-weight:700;letter-spacing:-0.6px;margin-bottom:4px}
+.cac-trend{font-size:11px;font-weight:500;margin-bottom:10px}
+.cac-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.cac-stat{background:rgba(0,0,0,0.2);border-radius:var(--r-sm);padding:7px 10px}
+.cac-stat-lbl{font-size:9px;color:var(--text-3);margin-bottom:2px;text-transform:uppercase;letter-spacing:0.04em}
+.cac-stat-val{font-size:13px;font-weight:600}
+.cac-bar-wrap{height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-top:10px}
+.cac-bar{height:100%;border-radius:2px}
+
+/* ── CAC TREND CHART ROW ── */
+.cac-chart-row{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:900px){.cac-chart-row{grid-template-columns:1fr}}
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;transition:border-color 0.2s}
+.chart-card:hover{border-color:var(--border-bright)}
+.chart-title{font-size:13px;font-weight:600;color:var(--text)}
+.chart-sub{font-size:10px;color:var(--text-2);margin-top:3px;margin-bottom:14px}
+.ctrl-sel{padding:5px 10px;border-radius:var(--r-sm);font-size:11px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-2)}
+.chart-wrap{position:relative}
+.chart-legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
+.cl-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-2)}
+.cl-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ══════════════════════════════════════
+   COHORT TABLES
+══════════════════════════════════════ */
+.cohort-tabs{display:flex;background:var(--bg-elevated);border-radius:var(--r);padding:3px;gap:2px;width:fit-content;margin-bottom:16px}
+.cohort-tab-btn{padding:7px 18px;border-radius:var(--r-sm);font-size:12px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s}
+.cohort-tab-btn.active{background:var(--purple);color:#fff}
+.cohort-tab-btn:hover:not(.active){color:var(--text)}
+
+.cohort-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.cohort-table{border-collapse:collapse;font-size:11px;min-width:900px;width:100%}
+.cohort-table th{
+  padding:9px 11px;font-size:10px;text-align:center;font-weight:700;
+  border-bottom:2px solid var(--border);white-space:nowrap;
+  background:rgba(255,255,255,0.02);
+}
+.cohort-table th.col-month{text-align:left;color:var(--purple)}
+.cohort-table th.col-churn{color:var(--red);font-style:italic}
+.cohort-table th.col-mx{color:var(--text-2)}
+.cohort-table th.col-m0{color:var(--green);background:rgba(0,200,150,0.05)}
+
+.cohort-table td{
+  padding:9px 11px;text-align:center;
+  border-bottom:1px solid rgba(255,255,255,0.03);
+  font-family:'DM Mono',monospace;font-size:11px;
+  border-right:1px solid rgba(255,255,255,0.02);
+  color:var(--text-2);
+}
+.cohort-table td.col-month{
+  text-align:left;font-family:'DM Sans',sans-serif;
+  font-weight:600;color:var(--text);
+  border-right:1px solid var(--border);
+  white-space:nowrap;
+}
+.cohort-table td.col-base{
+  font-weight:700;color:var(--purple);
+  border-right:1px solid var(--border);
+}
+.cohort-table td.col-churn-val{
+  font-weight:600;font-family:'DM Sans',monospace;
+  border-right:1px solid var(--border);
+}
+.cohort-table td.col-m0{
+  font-weight:700;color:var(--green);
+  background:rgba(0,200,150,0.05);
+  border-right:1px solid rgba(0,200,150,0.1);
+}
+.cohort-table tr:last-child td{border-bottom:none}
+.cohort-table tr:hover td{background:rgba(255,255,255,0.015)}
+.cohort-table .total-row td{
+  font-weight:700;color:var(--text);
+  background:rgba(123,110,246,0.06);
+  border-top:1px solid var(--border);
+}
+
+/* Heat colors for retention % */
+.ret-100{background:rgba(0,200,150,0.25);color:#fff;font-weight:700;border-radius:3px}
+.ret-80{background:rgba(0,200,150,0.18);color:var(--text)}
+.ret-60{background:rgba(0,200,150,0.12);color:var(--text)}
+.ret-40{background:rgba(245,166,35,0.12);color:var(--amber)}
+.ret-20{background:rgba(255,77,106,0.1);color:var(--red-light)}
+.ret-10{background:rgba(255,77,106,0.06);color:var(--text-3)}
+
+/* ── AT-RISK TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{padding:9px 12px;font-size:10px;color:var(--pink);text-align:left;font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.04em;background:rgba(255,255,255,0.01);white-space:nowrap}
+.data-table td{padding:10px 12px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(255,255,255,0.02)}
+.data-table tr.flag-row td{background:rgba(255,77,106,0.04)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600}
+.pill-green{background:rgba(0,200,150,0.12);color:var(--green)}
+.pill-amber{background:rgba(245,166,35,0.12);color:var(--amber)}
+.pill-red{background:rgba(255,77,106,0.12);color:var(--red)}
+.pill-blue{background:rgba(61,156,245,0.12);color:var(--blue)}
+.pill-pink{background:rgba(244,114,182,0.12);color:var(--pink)}
+
+/* ── GEO ── */
+.geo-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:800px){.geo-grid{grid-template-columns:1fr}}
+.geo-list{display:flex;flex-direction:column;gap:10px}
+.geo-item{}
+.geo-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.geo-name{font-size:12px;font-weight:500}
+.geo-val{font-size:11px;color:var(--text-2);font-family:'DM Mono',monospace}
+.geo-track{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.geo-fill{height:100%;border-radius:3px}
+.geo-meta{display:flex;justify-content:space-between;font-size:9px;color:var(--text-3);margin-top:3px}
+
+/* ── INSIGHT ── */
+.insight-panel{background:linear-gradient(135deg,rgba(244,114,182,0.07),rgba(123,110,246,0.04));border:1px solid rgba(244,114,182,0.2);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:16px}
+.insight-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.insight-badge{font-size:10px;font-weight:700;color:var(--pink);background:rgba(244,114,182,0.1);border:1px solid rgba(244,114,182,0.25);border-radius:20px;padding:3px 10px;text-transform:uppercase;letter-spacing:0.04em}
+.insight-ts{font-size:10px;color:var(--text-3)}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:700px){.insight-grid{grid-template-columns:1fr}}
+.insight-item{background:rgba(0,0,0,0.2);border-radius:var(--r-sm);padding:12px 14px;border:1px solid rgba(255,255,255,0.04)}
+.itag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+.itag-win{color:var(--green)}.itag-risk{color:var(--red)}.itag-action{color:var(--amber)}
+.itext{font-size:11px;color:var(--text-2);line-height:1.65}
+.itext strong{color:var(--text);font-weight:600}
+
+/* ── FOOTER ── */
+.dash-footer{display:flex;gap:18px;padding:12px 18px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-lg);flex-wrap:wrap}
+.df-item{font-size:11px;color:var(--text-2)}.df-item span{color:var(--text);font-weight:600}
+.df-div{width:1px;background:var(--border);flex-shrink:0}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.kpi-card{animation:fadeUp 0.4s ease both}
+.kpi-card:nth-child(1){animation-delay:.04s}.kpi-card:nth-child(2){animation-delay:.08s}
+.kpi-card:nth-child(3){animation-delay:.12s}.kpi-card:nth-child(4){animation-delay:.16s}
+.kpi-card:nth-child(5){animation-delay:.20s}.kpi-card:nth-child(6){animation-delay:.24s}
+.kpi-card:nth-child(7){animation-delay:.28s}.kpi-card:nth-child(8){animation-delay:.32s}
+</style>
+</head>
+<body>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="drill-overlay" onclick="closeModal(event)">
+  <div class="modal" id="drill-modal"></div>
+</div>
+
+<style>
+.modal-overlay{position:fixed;inset:0;background:rgba(5,4,15,0.88);backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#12102A;border:1px solid rgba(255,255,255,0.1);border-radius:18px;width:100%;max-width:900px;max-height:92vh;overflow-y:auto;box-shadow:0 40px 100px rgba(0,0,0,0.7);animation:modalIn 0.22s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-hdr{padding:22px 26px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.modal-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.modal-title{font-size:19px;font-weight:700;letter-spacing:-0.3px}
+.modal-sub{font-size:11px;color:var(--text-2);margin-top:3px}
+.modal-close{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:var(--text-2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;flex-shrink:0}
+.modal-close:hover{background:rgba(255,77,106,0.15);color:var(--red);border-color:var(--red)}
+.modal-period-row{display:flex;align-items:center;gap:8px;padding:14px 26px;flex-wrap:wrap}
+.mpicker{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px}
+.mpb{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s;cursor:pointer;border:none}
+.mpb.active{background:var(--pink);color:#fff}
+.modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 26px 18px}
+.mstat{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.mstat-lbl{font-size:10px;color:var(--text-2);margin-bottom:6px;font-weight:500}
+.mstat-val{font-size:21px;font-weight:700;letter-spacing:-0.4px;margin-bottom:3px}
+.mstat-sub{font-size:10px;color:var(--text-3)}
+.modal-divider{height:1px;background:var(--border);margin:0 26px 18px}
+.modal-chart-sec{padding:0 26px 18px}
+.modal-chart-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+.modal-chart-sub{font-size:10px;color:var(--text-2);margin-bottom:12px}
+.modal-chart-wrap{position:relative;height:200px}
+.modal-two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 26px 18px}
+.modal-col-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.modal-col-title{font-size:10px;font-weight:600;color:var(--pink);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.modal-table{width:100%;border-collapse:collapse;font-size:12px}
+.modal-table th{padding:7px 10px;font-size:10px;color:var(--pink);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.04em;text-align:left}
+.modal-table td{padding:9px 10px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.03)}
+.modal-table tr:last-child td{border-bottom:none}
+.modal-table tr:hover td{background:rgba(255,255,255,0.02)}
+.modal-insight{margin:0 26px 22px;background:linear-gradient(135deg,rgba(244,114,182,0.07),rgba(123,110,246,0.04));border:1px solid rgba(244,114,182,0.2);border-radius:12px;padding:14px 16px}
+.modal-insight-hdr{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.modal-insight-badge{font-size:10px;font-weight:700;color:var(--pink);background:rgba(244,114,182,0.1);border:1px solid rgba(244,114,182,0.2);border-radius:20px;padding:2px 10px;text-transform:uppercase;letter-spacing:0.04em}
+.modal-insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.modal-iitem{background:rgba(0,0,0,0.25);border-radius:8px;padding:10px 12px;border:1px solid rgba(255,255,255,0.04)}
+.modal-itag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.modal-itext{font-size:11px;color:var(--text-2);line-height:1.6}
+.modal-itext strong{color:var(--text)}
+.prog-row{display:flex;flex-direction:column;gap:10px}
+.prog-item .prog-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.prog-name{color:var(--text);font-weight:500}
+.prog-val{color:var(--text-2);font-family:'DM Mono',monospace;font-size:10px}
+.prog-track{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px}
+.mbadge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.mbadge-green{background:rgba(0,200,150,0.15);color:#00C896}
+.mbadge-red{background:rgba(255,77,106,0.15);color:#FF4D6A}
+.mbadge-amber{background:rgba(245,166,35,0.15);color:#F5A623}
+.mbadge-teal{background:rgba(6,182,212,0.15);color:#06B6D4}
+.itag-win{color:var(--green)}.itag-risk{color:var(--red)}.itag-action{color:var(--amber)}
+</style>
+
+<!-- ═══ TOPBAR ════════════════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">❤️</div>
+    <div>
+      <div class="brand-name">nyx.today</div>
+      <div class="brand-sub">Customer — Tab 5 · Lifecycle metrics, acquisition costs, retention strategies</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div class="tab-nav">
+      <button class="tab-btn">🎯 Executive</button>
+      <button class="tab-btn">📦 Revenue</button>
+      <button class="tab-btn">📣 Marketing</button>
+      <button class="tab-btn">🚦 Traffic</button>
+      <button class="tab-btn active">❤️ Customer</button>
+      <button class="tab-btn" disabled>💰 Budget</button>
+    </div>
+    <div class="live-pill"><div class="live-dot"></div>Live · 2 min ago</div>
+  </div>
+</div>
+
+<!-- ═══ PERIOD PICKER ════════════════════════════════════════════ -->
+<div class="period-row">
+  <div class="period-picker">
+    <button class="period-btn" onclick="setPeriod('today',this)">Today</button>
+    <button class="period-btn" onclick="setPeriod('7d',this)">7 Days</button>
+    <button class="period-btn active" onclick="setPeriod('30d',this)">30 Days</button>
+    <button class="period-btn" onclick="setPeriod('mtd',this)">MTD</button>
+    <button class="period-btn" onclick="setPeriod('ytd',this)">YTD</button>
+  </div>
+  <div class="period-badge">Viewing: <span id="period-label">Last 30 Days</span></div>
+</div>
+
+<!-- ═══ KPI CARDS — ROW 1 ═════════════════════════════════════════ -->
+<div class="sec-lbl">
+  <div class="sec-lbl-left">
+    <div class="sec-dot" style="background:var(--pink)"></div>
+    <span class="sec-title">Customer Acquisition & Retention</span>
+    <span class="sec-sub-lbl">— Acquisition, retention, lifetime value & churn signals</span>
+  </div>
+  <span style="font-size:10px;color:var(--text-3)">🔍 Click any card to drill down</span>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card up" onclick="openDrill('new-customers')">
+    <div class="kpi-top"><div class="kpi-label">New Customers</div><div class="kpi-icon" style="background:rgba(0,200,150,0.12)">👤</div></div>
+    <div class="kpi-value" id="kpi-val-new-cust">3.29K</div>
+    <div class="kpi-delta delta-up" id="kpi-delta-new-cust">↑ +15.7% vs last month</div>
+    <div class="kpi-vs" id="kpi-vs-new-cust">vs last month</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+  <div class="kpi-card up" onclick="openDrill('repeat-customers')">
+    <div class="kpi-top"><div class="kpi-label">Repeat Customers</div><div class="kpi-icon" style="background:rgba(123,110,246,0.12)">🔄</div></div>
+    <div class="kpi-value" id="kpi-val-repeat-cust">1.62K</div>
+    <div class="kpi-delta delta-up" id="kpi-delta-repeat-cust">↑ +8.3% vs last month</div>
+    <div class="kpi-vs" id="kpi-vs-repeat-cust">vs last month</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+  <div class="kpi-card up" onclick="openDrill('retention')">
+    <div class="kpi-top"><div class="kpi-label">Customer Retention Rate</div><div class="kpi-icon" style="background:rgba(61,156,245,0.12)">📈</div></div>
+    <div class="kpi-value" id="kpi-val-retention">78%</div>
+    <div class="kpi-delta delta-up" id="kpi-delta-retention">↑ +2% vs last month</div>
+    <div class="kpi-vs" id="kpi-vs-retention">industry avg 70–75%</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+  <div class="kpi-card down" onclick="openDrill('churn')">
+    <div class="kpi-top"><div class="kpi-label">Customer Churn Rate</div><div class="kpi-icon" style="background:rgba(255,77,106,0.12)">📉</div></div>
+    <div class="kpi-value" id="kpi-val-churn">2.10%</div>
+    <div class="kpi-delta delta-up" id="kpi-delta-churn">↓ −0.3% vs last month</div>
+    <div class="kpi-vs" id="kpi-vs-churn">improving · watch for rebound</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+</div>
+
+<div class="kpi-grid-2">
+  <div class="kpi-card up" onclick="openDrill('clv')">
+    <div class="kpi-top"><div class="kpi-label">Customer Lifetime Value</div><div class="kpi-icon" style="background:rgba(244,114,182,0.12)">💎</div></div>
+    <div class="kpi-value" id="kpi-val-clv">₹2.10K</div>
+    <div class="kpi-delta delta-up" id="kpi-delta-clv">↑ +5.1% vs last month</div>
+    <div class="kpi-vs" id="kpi-vs-clv">LTV growing steadily</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+  <div class="kpi-card warn" onclick="openDrill('clvcac')">
+    <div class="kpi-top"><div class="kpi-label">CLV / CAC Ratio</div><div class="kpi-icon" style="background:rgba(245,166,35,0.12)">⚖️</div></div>
+    <div class="kpi-value" id="kpi-val-clvcac">4.1x</div>
+    <div class="kpi-delta delta-up" id="kpi-delta-clvcac">↑ +0.2x vs last month</div>
+    <div class="kpi-vs" id="kpi-vs-clvcac">benchmark 3x+ · healthy</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+  <div class="kpi-card up" onclick="openDrill('repeat-rate')">
+    <div class="kpi-top"><div class="kpi-label">Repeat Purchase Rate</div><div class="kpi-icon" style="background:rgba(0,200,150,0.12)">🛒</div></div>
+    <div class="kpi-value" id="kpi-val-repeat-rate">45%</div>
+    <div class="kpi-delta delta-up" id="kpi-delta-repeat-rate">↑ +3% vs last month</div>
+    <div class="kpi-vs" id="kpi-vs-repeat-rate">above 25–30% D2C avg</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+  <div class="kpi-card new-metric" onclick="openDrill('new-vs-repeat')">
+    <div class="kpi-top"><div class="kpi-label" style="color:rgba(0,200,150,0.8)">New vs Repeat Subscribers</div><div class="kpi-icon" style="background:rgba(0,200,150,0.15)">📊</div></div>
+    <div class="kpi-value" id="kpi-val-nvr" style="color:var(--green)">35:65</div>
+    <div class="kpi-delta delta-up" id="kpi-delta-nvr">65% repeat — strong loyalty</div>
+    <div class="kpi-vs" id="kpi-vs-nvr">loyalty signal</div>
+    <div class="kpi-new-tag">loyalty signal</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+</div>
+
+<!-- ═══ CAC BY SOURCE ═════════════════════════════════════════════ -->
+<div class="sec-lbl">
+  <div class="sec-lbl-left">
+    <div class="sec-dot" style="background:var(--blue)"></div>
+    <span class="sec-title">CAC by Acquisition Source</span>
+    <span class="sec-sub-lbl">— cost per customer by channel</span>
+  </div>
+</div>
+
+<div class="cac-grid">
+  <!-- Google -->
+  <div class="cac-card" style="border-color:rgba(66,133,244,0.3)">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#4285F4;border-radius:var(--r-lg) var(--r-lg) 0 0"></div>
+    <div class="cac-source">
+      <div class="cac-icon" style="background:rgba(66,133,244,0.12)">🔵</div>
+      <div>
+        <div class="cac-name">Google Ads</div>
+        <div class="cac-share">42% of paid acquisitions</div>
+      </div>
+    </div>
+    <div class="cac-value" style="color:#4285F4">₹154</div>
+    <div class="cac-trend delta-up">↓ −₹18 vs last month · improving</div>
+    <div class="cac-stats">
+      <div class="cac-stat"><div class="cac-stat-lbl">New Customers</div><div class="cac-stat-val" style="color:#4285F4">8,100</div></div>
+      <div class="cac-stat"><div class="cac-stat-lbl">Total Spend</div><div class="cac-stat-val">₹1.25L</div></div>
+      <div class="cac-stat"><div class="cac-stat-lbl">LTV:CAC</div><div class="cac-stat-val" style="color:var(--green)">13.6x</div></div>
+      <div class="cac-stat"><div class="cac-stat-lbl">Best Campaign</div><div class="cac-stat-val" style="font-size:11px">Brand Search</div></div>
+    </div>
+    <div class="cac-bar-wrap"><div class="cac-bar" style="width:42%;background:#4285F4"></div></div>
+  </div>
+
+  <!-- Facebook / Meta -->
+  <div class="cac-card" style="border-color:rgba(24,119,242,0.3)">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#1877F2;border-radius:var(--r-lg) var(--r-lg) 0 0"></div>
+    <div class="cac-source">
+      <div class="cac-icon" style="background:rgba(24,119,242,0.12)">🔷</div>
+      <div>
+        <div class="cac-name">Facebook / Meta</div>
+        <div class="cac-share">32% of paid acquisitions</div>
+      </div>
+    </div>
+    <div class="cac-value" style="color:#1877F2">₹181</div>
+    <div class="cac-trend" style="color:var(--amber)">↑ +₹12 vs last month · rising</div>
+    <div class="cac-stats">
+      <div class="cac-stat"><div class="cac-stat-lbl">New Customers</div><div class="cac-stat-val" style="color:#1877F2">6,200</div></div>
+      <div class="cac-stat"><div class="cac-stat-lbl">Total Spend</div><div class="cac-stat-val">₹98K</div></div>
+      <div class="cac-stat"><div class="cac-stat-lbl">LTV:CAC</div><div class="cac-stat-val" style="color:var(--amber)">11.6x</div></div>
+      <div class="cac-stat"><div class="cac-stat-lbl">Best Campaign</div><div class="cac-stat-val" style="font-size:11px">Retargeting</div></div>
+    </div>
+    <div class="cac-bar-wrap"><div class="cac-bar" style="width:32%;background:#1877F2"></div></div>
+  </div>
+
+  <!-- Others -->
+  <div class="cac-card" style="border-color:rgba(123,110,246,0.3)">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--purple);border-radius:var(--r-lg) var(--r-lg) 0 0"></div>
+    <div class="cac-source">
+      <div class="cac-icon" style="background:rgba(123,110,246,0.12)">🌐</div>
+      <div>
+        <div class="cac-name">Others (TikTok, LinkedIn, Referral)</div>
+        <div class="cac-share">26% of paid acquisitions</div>
+      </div>
+    </div>
+    <div class="cac-value" style="color:var(--purple)">₹210</div>
+    <div class="cac-trend" style="color:var(--text-2)">→ stable vs last month</div>
+    <div class="cac-stats">
+      <div class="cac-stat"><div class="cac-stat-lbl">New Customers</div><div class="cac-stat-val" style="color:var(--purple)">4,980</div></div>
+      <div class="cac-stat"><div class="cac-stat-lbl">Total Spend</div><div class="cac-stat-val">₹1.05L</div></div>
+      <div class="cac-stat"><div class="cac-stat-lbl">LTV:CAC</div><div class="cac-stat-val" style="color:var(--blue)">10.0x</div></div>
+      <div class="cac-stat"><div class="cac-stat-lbl">Best Source</div><div class="cac-stat-val" style="font-size:11px">TikTok ₹175</div></div>
+    </div>
+    <div class="cac-bar-wrap"><div class="cac-bar" style="width:26%;background:var(--purple)"></div></div>
+  </div>
+</div>
+
+<!-- CAC Trend Chart + Comparison -->
+<div class="cac-chart-row">
+  <div class="chart-card">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <div>
+        <div class="chart-title">CAC Trend by Source — Monthly</div>
+        <div class="chart-sub">Is cost per customer improving or worsening per channel?</div>
+      </div>
+    </div>
+    <div class="chart-wrap" style="height:200px"><canvas id="cacTrendChart"></canvas></div>
+    <div class="chart-legend">
+      <div class="cl-item"><span class="cl-dot" style="background:#4285F4"></span>Google</div>
+      <div class="cl-item"><span class="cl-dot" style="background:#1877F2"></span>Facebook</div>
+      <div class="cl-item"><span class="cl-dot" style="background:var(--purple)"></span>Others</div>
+      <div class="cl-item"><span class="cl-dot" style="background:var(--text-3)"></span>Blended</div>
+    </div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">Customers by Source This Month</div>
+    <div class="chart-sub">Volume acquired per channel</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="cacSourceChart"></canvas></div>
+  </div>
+</div>
+
+<!-- ═══ COHORT ANALYSIS ══════════════════════════════════════════ -->
+<div class="sec-card">
+  <div class="sec-card-hdr">
+    <div>
+      <div class="sec-card-title">📅 Customer Cohort Analysis</div>
+      <div class="sec-card-sub">M0 = acquisition month · M1, M2... = months after · avg monthly churn: 10–30% · darker green = stronger retention</div>
+    </div>
+    <div class="cohort-tabs">
+      <button class="cohort-tab-btn active" onclick="switchCohort('new',this)">New Customer Cohort</button>
+      <button class="cohort-tab-btn" onclick="switchCohort('repeat',this)">Repeat Customer Cohort</button>
+    </div>
+  </div>
+  <div class="sec-card-body" style="padding:14px 16px">
+    <div id="cohort-panel-new" class="cohort-panel">
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Monthly Retention Rate → each row shows what % of that month's new customers came back</div>
+      <div class="cohort-wrap">
+        <table class="cohort-table" id="new-cohort-table"></table>
+      </div>
+    </div>
+    <div id="cohort-panel-repeat" class="cohort-panel" style="display:none">
+      <div style="font-size:11px;color:var(--text-2);margin-bottom:10px">Base Churn Rate → shows repeat purchase volume from each cohort over time</div>
+      <div class="cohort-wrap">
+        <table class="cohort-table" id="repeat-cohort-table"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AT-RISK + GEO ════════════════════════════════════════════ -->
+<div class="geo-grid">
+
+  <!-- At-Risk Customers -->
+  <div class="sec-card" style="margin-bottom:0">
+    <div class="sec-card-hdr">
+      <div>
+        <div class="sec-card-title">⚠️ At-Risk Customers</div>
+        <div class="sec-card-sub">Showing churn signals — act before they leave</div>
+      </div>
+      <span style="font-size:10px;color:var(--red);font-weight:600">948 at risk this month</span>
+    </div>
+    <div style="padding:0">
+      <table class="data-table">
+        <thead><tr><th>Segment</th><th>Count</th><th>Risk Signal</th><th>Last Active</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr class="flag-row"><td style="font-weight:600">High-value churning</td><td style="font-family:'DM Mono',monospace">94</td><td><span class="pill pill-red">3+ missed renewals</span></td><td style="color:var(--text-2);font-size:11px">30+ days ago</td><td><span class="pill pill-pink">Personal outreach</span></td></tr>
+          <tr class="flag-row"><td style="font-weight:600">New (< 30 days)</td><td style="font-family:'DM Mono',monospace">412</td><td><span class="pill pill-red">No 2nd purchase</span></td><td style="color:var(--text-2);font-size:11px">8–20 days ago</td><td><span class="pill pill-amber">Send offer</span></td></tr>
+          <tr><td style="font-weight:600">Subscription lapsed</td><td style="font-family:'DM Mono',monospace">256</td><td><span class="pill pill-amber">Sub expired</span></td><td style="color:var(--text-2);font-size:11px">Varies</td><td><span class="pill pill-green">Win-back flow</span></td></tr>
+          <tr><td style="font-weight:600">3–6 months old</td><td style="font-family:'DM Mono',monospace">186</td><td><span class="pill pill-amber">Drop in sessions</span></td><td style="color:var(--text-2);font-size:11px">14–28 days ago</td><td><span class="pill pill-blue">Re-engage</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Geographic Revenue -->
+  <div class="sec-card" style="margin-bottom:0">
+    <div class="sec-card-hdr">
+      <div>
+        <div class="sec-card-title">🗺️ Revenue by Geography</div>
+        <div class="sec-card-sub">Top cities driving revenue this period</div>
+      </div>
+    </div>
+    <div class="sec-card-body">
+      <div class="geo-list">
+        <div class="geo-item">
+          <div class="geo-top"><span class="geo-name">🏙️ Mumbai</span><span class="geo-val">₹2.18M · 25%</span></div>
+          <div class="geo-track"><div class="geo-fill" style="width:100%;background:var(--pink)"></div></div>
+          <div class="geo-meta"><span>↑ +18% MoM</span><span>CAC: ₹420</span></div>
+        </div>
+        <div class="geo-item">
+          <div class="geo-top"><span class="geo-name">🏙️ Delhi NCR</span><span class="geo-val">₹1.92M · 22%</span></div>
+          <div class="geo-track"><div class="geo-fill" style="width:88%;background:var(--purple)"></div></div>
+          <div class="geo-meta"><span>↑ +14% MoM</span><span>CAC: ₹398</span></div>
+        </div>
+        <div class="geo-item">
+          <div class="geo-top"><span class="geo-name">🏙️ Bengaluru</span><span class="geo-val">₹1.48M · 17%</span></div>
+          <div class="geo-track"><div class="geo-fill" style="width:68%;background:var(--blue)"></div></div>
+          <div class="geo-meta"><span>↑ +22% MoM · fastest growing</span><span>CAC: ₹362</span></div>
+        </div>
+        <div class="geo-item">
+          <div class="geo-top"><span class="geo-name">🏙️ Hyderabad</span><span class="geo-val">₹874K · 10%</span></div>
+          <div class="geo-track"><div class="geo-fill" style="width:40%;background:var(--green)"></div></div>
+          <div class="geo-meta"><span>↑ +9% MoM</span><span>CAC: ₹441</span></div>
+        </div>
+        <div class="geo-item">
+          <div class="geo-top"><span class="geo-name">🏙️ Chennai</span><span class="geo-val">₹610K · 7%</span></div>
+          <div class="geo-track"><div class="geo-fill" style="width:28%;background:var(--amber)"></div></div>
+          <div class="geo-meta"><span>↑ +6% MoM</span><span>CAC: ₹512</span></div>
+        </div>
+        <div class="geo-item">
+          <div class="geo-top"><span class="geo-name">🌍 Others</span><span class="geo-val">₹1.66M · 19%</span></div>
+          <div class="geo-track"><div class="geo-fill" style="width:76%;background:var(--text-3)"></div></div>
+          <div class="geo-meta"><span>Tier 2 + 3 cities</span><span>Growing</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INSIGHT PANEL ═════════════════════════════════════════════ -->
+<div style="margin-top:14px"></div>
+<div class="insight-panel">
+  <div class="insight-hdr">
+    <div class="insight-badge">🧠 Customer Intelligence</div>
+    <div class="insight-ts">Auto-generated · <span id="insight-period">Last 30 Days</span></div>
+  </div>
+  <div class="insight-grid">
+    <div class="insight-item">
+      <div class="itag itag-win">✅ Win</div>
+      <div class="itext"><strong>65% of subscribers are repeat buyers</strong> — strong loyalty signal. Google has the lowest CAC at ₹154 and is improving MoM. Bengaluru is the fastest growing city at +22% with the lowest CAC of ₹362.</div>
+    </div>
+    <div class="insight-item">
+      <div class="itag itag-risk">⚠ Risk</div>
+      <div class="itext"><strong>412 new customers haven't made a 2nd purchase</strong> within 30 days — early churn signal. Facebook CAC rising to ₹181 (+₹12 MoM). If this continues, Facebook ROAS will drop below 3x within 2 months.</div>
+    </div>
+    <div class="insight-item">
+      <div class="itag itag-action">💡 Action</div>
+      <div class="itext"><strong>Activate win-back flow for 948 at-risk customers.</strong> At current CLV of ₹2.1K, saving 50% of at-risk customers = <strong>+₹9.9L preserved LTV.</strong> Start with high-value segment (94 customers) — personal outreach first.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════ -->
+<div class="dash-footer">
+  <div class="df-item">Tab: <span>Customer</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Period: <span id="footer-period">Last 30 Days</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Retention Rate: <span style="color:var(--green)">78%</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Churn Rate: <span style="color:var(--amber)">2.10%</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Best CAC Source: <span style="color:#4285F4">Google ₹154</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">At-Risk Customers: <span style="color:var(--red)">948</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Top City: <span>Mumbai 25%</span></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   SHARED
+══════════════════════════════════════════════════ */
+const gc='rgba(255,255,255,0.04)',tc='#8B87A8';
+const tip={backgroundColor:'#1A1730',titleColor:'#F0EEF8',bodyColor:'#8B87A8',borderColor:'rgba(244,114,182,0.2)',borderWidth:1,padding:10,cornerRadius:8};
+
+/* ══════════════════════════════════════════════════
+   PERIOD DATA
+══════════════════════════════════════════════════ */
+const KPI_PERIODS={
+  today:{
+    'new-customers':{val:'142',delta:'↑ +12.3%',vs:'vs yesterday'},
+    'repeat-customers':{val:'68',delta:'↑ +8.1%',vs:'vs yesterday'},
+    'retention':{val:'78%',delta:'↑ +2%',vs:'trailing 30d'},
+    'churn':{val:'2.10%',delta:'↓ −0.3%',vs:'improving'},
+    'clv':{val:'₹2.10K',delta:'↑ +5.1%',vs:'trailing 30d'},
+    'clvcac':{val:'4.1x',delta:'↑ +0.2x',vs:'benchmark 3x+'},
+    'repeat-rate':{val:'45%',delta:'↑ +3%',vs:'trailing 30d'},
+    'new-vs-repeat':{val:'35:65',delta:'65% repeat',vs:'loyalty signal'},
+  },
+  '7d':{
+    'new-customers':{val:'812',delta:'↑ +11.4%',vs:'vs prev 7 days'},
+    'repeat-customers':{val:'398',delta:'↑ +7.2%',vs:'vs prev 7 days'},
+    'retention':{val:'77%',delta:'↑ +1%',vs:'vs prev week'},
+    'churn':{val:'2.20%',delta:'↓ −0.2%',vs:'improving'},
+    'clv':{val:'₹2.08K',delta:'↑ +4.6%',vs:'vs prev week'},
+    'clvcac':{val:'4.0x',delta:'↑ +0.1x',vs:'benchmark 3x+'},
+    'repeat-rate':{val:'43%',delta:'↑ +2%',vs:'vs prev week'},
+    'new-vs-repeat':{val:'36:64',delta:'64% repeat',vs:'loyalty signal'},
+  },
+  '30d':{
+    'new-customers':{val:'3.29K',delta:'↑ +15.7%',vs:'vs last month'},
+    'repeat-customers':{val:'1.62K',delta:'↑ +8.3%',vs:'vs last month'},
+    'retention':{val:'78%',delta:'↑ +2%',vs:'industry avg 70–75%'},
+    'churn':{val:'2.10%',delta:'↓ −0.3%',vs:'improving · watch for rebound'},
+    'clv':{val:'₹2.10K',delta:'↑ +5.1%',vs:'LTV growing steadily'},
+    'clvcac':{val:'4.1x',delta:'↑ +0.2x',vs:'benchmark 3x+ · healthy'},
+    'repeat-rate':{val:'45%',delta:'↑ +3%',vs:'above 25–30% D2C avg'},
+    'new-vs-repeat':{val:'35:65',delta:'65% repeat — strong loyalty',vs:'loyalty signal'},
+  },
+  mtd:{
+    'new-customers':{val:'2.84K',delta:'↑ +13.2%',vs:'vs last MTD'},
+    'repeat-customers':{val:'1.38K',delta:'↑ +6.8%',vs:'vs last MTD'},
+    'retention':{val:'77%',delta:'↑ +1.5%',vs:'vs last MTD'},
+    'churn':{val:'2.20%',delta:'↓ −0.2%',vs:'improving'},
+    'clv':{val:'₹2.08K',delta:'↑ +4.2%',vs:'vs last MTD'},
+    'clvcac':{val:'4.0x',delta:'↑ +0.1x',vs:'benchmark 3x+'},
+    'repeat-rate':{val:'43%',delta:'↑ +2.4%',vs:'vs last MTD'},
+    'new-vs-repeat':{val:'36:64',delta:'64% repeat',vs:'loyalty signal'},
+  },
+  ytd:{
+    'new-customers':{val:'32.4K',delta:'↑ +28.4%',vs:'vs last YTD'},
+    'repeat-customers':{val:'14.8K',delta:'↑ +22.1%',vs:'vs last YTD'},
+    'retention':{val:'76%',delta:'↑ +4%',vs:'vs last YTD'},
+    'churn':{val:'2.40%',delta:'↓ −0.6%',vs:'improving YTD'},
+    'clv':{val:'₹1.96K',delta:'↑ +12.4%',vs:'vs last YTD'},
+    'clvcac':{val:'3.8x',delta:'↑ +0.6x',vs:'benchmark 3x+'},
+    'repeat-rate':{val:'41%',delta:'↑ +6%',vs:'vs last YTD'},
+    'new-vs-repeat':{val:'38:62',delta:'62% repeat',vs:'loyalty signal'},
+  }
+};
+
+const KPI_CARD_MAP={
+  'new-customers':   {valEl:'kpi-val-new-cust',    deltaEl:'kpi-delta-new-cust',    vsEl:'kpi-vs-new-cust'},
+  'repeat-customers':{valEl:'kpi-val-repeat-cust',  deltaEl:'kpi-delta-repeat-cust',  vsEl:'kpi-vs-repeat-cust'},
+  'retention':       {valEl:'kpi-val-retention',    deltaEl:'kpi-delta-retention',    vsEl:'kpi-vs-retention'},
+  'churn':           {valEl:'kpi-val-churn',         deltaEl:'kpi-delta-churn',         vsEl:'kpi-vs-churn'},
+  'clv':             {valEl:'kpi-val-clv',           deltaEl:'kpi-delta-clv',           vsEl:'kpi-vs-clv'},
+  'clvcac':          {valEl:'kpi-val-clvcac',        deltaEl:'kpi-delta-clvcac',        vsEl:'kpi-vs-clvcac'},
+  'repeat-rate':     {valEl:'kpi-val-repeat-rate',   deltaEl:'kpi-delta-repeat-rate',   vsEl:'kpi-vs-repeat-rate'},
+  'new-vs-repeat':   {valEl:'kpi-val-nvr',           deltaEl:'kpi-delta-nvr',           vsEl:'kpi-vs-nvr'},
+};
+
+let currentPeriod='30d';
+function setPeriod(p,btn){
+  currentPeriod=p;
+  const LABELS={today:'Today','7d':'Last 7 Days','30d':'Last 30 Days',mtd:'Month-to-Date',ytd:'Year-to-Date'};
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const label=LABELS[p];
+  document.getElementById('period-label').textContent=label;
+  document.getElementById('footer-period').textContent=label;
+  document.getElementById('insight-period').textContent=label;
+  // Update all KPI cards
+  const data=KPI_PERIODS[p]||KPI_PERIODS['30d'];
+  Object.entries(KPI_CARD_MAP).forEach(([id,els])=>{
+    const d=data[id]; if(!d) return;
+    const vEl=document.getElementById(els.valEl);
+    const dEl=document.getElementById(els.deltaEl);
+    const vsEl=document.getElementById(els.vsEl);
+    if(vEl) vEl.textContent=d.val;
+    if(dEl) dEl.textContent=d.delta;
+    if(vsEl) vsEl.textContent=d.vs;
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   DRILL-DOWN ENGINE
+══════════════════════════════════════════════════ */
+const gc2='rgba(255,255,255,0.04)',tc2='#8B87A8';
+const tip2={backgroundColor:'#1A1730',titleColor:'#F0EEF8',bodyColor:'#8B87A8',borderColor:'rgba(244,114,182,0.25)',borderWidth:1,padding:10,cornerRadius:8};
+let activeDrillChart=null;
+
+const DRILL={
+  'new-customers':{
+    title:'New Customers',icon:'👤',iconBg:'rgba(0,200,150,0.15)',
+    stats:[
+      {lbl:'New Customers This Month',val:'3.29K',sub:'↑ +15.7% vs last month',col:'#00C896'},
+      {lbl:'Best Acquisition Channel',val:'Google',sub:'₹154 CAC — lowest cost',col:'#4285F4'},
+      {lbl:'Fastest Growing City',val:'Bengaluru',sub:'+22% MoM — lowest CAC ₹362',col:'#F472B6'},
+    ],
+    chartTitle:'New Customer Acquisition — Monthly Trend',chartSub:'Is acquisition accelerating? Compare channels.',
+    chartType:'bar',
+    chartData:{
+      labels:['Jan','Feb','Mar','Apr'],
+      datasets:[
+        {label:'Google',data:[680,720,760,810],backgroundColor:'rgba(66,133,244,0.75)',borderRadius:4,borderSkipped:false,stack:'s'},
+        {label:'Meta',data:[510,540,580,620],backgroundColor:'rgba(24,119,242,0.7)',borderRadius:4,borderSkipped:false,stack:'s'},
+        {label:'Others',data:[380,400,420,498],backgroundColor:'rgba(123,110,246,0.65)',borderRadius:4,borderSkipped:false,stack:'s'},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v>=1000?(v/1000).toFixed(1)+'K':v},stacked:true},
+    bkTitle:'New Customers by City',
+    bkCols:['City','New Customers','CAC','MoM Growth','Share'],
+    bkRows:[
+      ['🏙️ Mumbai','824',{txt:'₹420',cls:'mbadge-amber'},'↑ +18%','25%'],
+      ['🏙️ Delhi NCR','724',{txt:'₹398',cls:'mbadge-amber'},'↑ +14%','22%'],
+      ['🏙️ Bengaluru','559',{txt:'₹362',cls:'mbadge-green'},'↑ +22%','17%'],
+      ['🏙️ Hyderabad','329',{txt:'₹441',cls:'mbadge-amber'},'↑ +9%','10%'],
+      ['🏙️ Others','854',{txt:'—',cls:'mbadge-teal'},'↑ growing','26%'],
+    ],
+    vizTitle:'CAC by City',
+    vizBars:[
+      {name:'Bengaluru (₹362)',val:'₹362',pct:60,col:'#00C896'},
+      {name:'Delhi NCR (₹398)',val:'₹398',pct:66,col:'#3D9CF5'},
+      {name:'Mumbai (₹420)',val:'₹420',pct:70,col:'#F472B6'},
+      {name:'Hyderabad (₹441)',val:'₹441',pct:74,col:'#F5A623'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>New customers up 15.7% MoM — acquisition is accelerating.</strong> Bengaluru growing fastest at +22% with lowest CAC of ₹362. Google remains most efficient at ₹154 CAC.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>412 new customers haven\'t made a 2nd purchase within 30 days.</strong> Early churn signal. Without a 2nd purchase trigger, these customers will likely churn before contributing meaningful LTV.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Launch a 2nd-purchase nudge campaign</strong> targeting new customers at Day 7 and Day 14. Offer a 10% discount on the next order. Historical conversion on this segment is 28% — could recover ~115 customers/month.'},
+    ]
+  },
+  'repeat-customers':{
+    title:'Repeat Customers',icon:'🔄',iconBg:'rgba(123,110,246,0.15)',
+    stats:[
+      {lbl:'Repeat Customers This Month',val:'1.62K',sub:'↑ +8.3% vs last month',col:'#7B6EF6'},
+      {lbl:'Avg Orders per Repeat Customer',val:'3.4x',sub:'vs 1.0x for new customers',col:'#00C896'},
+      {lbl:'Repeat Customer Revenue Share',val:'58%',sub:'58% of total revenue from repeats',col:'#F472B6'},
+    ],
+    chartTitle:'Repeat vs New Customers — Monthly Split',chartSub:'Is the repeat base growing faster than new acquisition?',
+    chartType:'line',
+    chartData:{
+      labels:['Jan','Feb','Mar','Apr'],
+      datasets:[
+        {label:'New Customers',data:[2480,2680,2840,3290],borderColor:'#00C896',backgroundColor:'rgba(0,200,150,0.06)',tension:0.4,pointRadius:4,fill:true},
+        {label:'Repeat Customers',data:[1280,1380,1498,1620],borderColor:'#7B6EF6',backgroundColor:'transparent',tension:0.4,pointRadius:4,borderDash:[4,3]},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v>=1000?(v/1000).toFixed(1)+'K':v}},
+    bkTitle:'Repeat Customer Behaviour',
+    bkCols:['Metric','Value','Benchmark','Status'],
+    bkRows:[
+      ['Repeat Purchase Rate',{txt:'45%',cls:'mbadge-green'},'25–30% D2C avg',{txt:'✅ Above avg',cls:'mbadge-green'}],
+      ['Avg Orders (repeat)',{txt:'3.4x',cls:'mbadge-teal'},'2–3x',{txt:'✅ Good',cls:'mbadge-green'}],
+      ['Time Between Purchases',{txt:'18 days',cls:'mbadge-amber'},'14–21 days',{txt:'→ Normal',cls:'mbadge-amber'}],
+      ['Revenue from Repeats',{txt:'58%',cls:'mbadge-green'},'40–60%',{txt:'✅ Healthy',cls:'mbadge-green'}],
+    ],
+    vizTitle:'Revenue Contribution',
+    vizBars:[
+      {name:'Repeat customers (58% of revenue)',val:'58%',pct:100,col:'#7B6EF6'},
+      {name:'New customers (42% of revenue)',val:'42%',pct:72,col:'#00C896'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>Repeat customers generate 58% of revenue</strong> despite being only 33% of customer count. Each repeat customer spends 3.4x in their lifetime. The 65% subscriber repeat rate is a strong loyalty signal.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>Repeat growth at +8.3% is lagging new customer growth at +15.7%.</strong> If new customers don\'t convert to repeat buyers, the repeat base will shrink as a share — increasing revenue concentration risk.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Build a loyalty tier programme.</strong> Customers who reach 3 purchases should receive a loyalty status with benefits. This incentivises the journey from 2 → 3 → 4+ purchases and will lift the 3.4x avg order count.'},
+    ]
+  },
+  'retention':{
+    title:'Customer Retention Rate',icon:'📈',iconBg:'rgba(61,156,245,0.15)',
+    stats:[
+      {lbl:'Overall Retention Rate',val:'78%',sub:'↑ +2% vs last month — above industry',col:'#00C896'},
+      {lbl:'Industry Benchmark',val:'70–75%',sub:'nyx.today is 3–8pp above benchmark',col:'#3D9CF5'},
+      {lbl:'Best Retained Segment',val:'Subscribers',sub:'88% retention vs 61% non-sub',col:'#F472B6'},
+    ],
+    chartTitle:'Retention Rate — Monthly Trend',chartSub:'Is retention improving consistently?',
+    chartType:'line',
+    chartData:{
+      labels:['Jan','Feb','Mar','Apr'],
+      datasets:[
+        {label:'Overall',data:[72,74,76,78],borderColor:'#3D9CF5',backgroundColor:'rgba(61,156,245,0.07)',tension:0.4,pointRadius:5,fill:true},
+        {label:'Subscribers',data:[84,85,87,88],borderColor:'#00C896',backgroundColor:'transparent',tension:0.4,pointRadius:5},
+        {label:'Non-subscribers',data:[58,59,61,61],borderColor:'#F5A623',backgroundColor:'transparent',tension:0.4,pointRadius:5,borderDash:[4,3]},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v+'%',min:50,max:100}},
+    bkTitle:'Retention by Customer Segment',
+    bkCols:['Segment','Retention','vs Industry','Revenue Impact'],
+    bkRows:[
+      ['Subscribers',{txt:'88%',cls:'mbadge-green'},'↑ 13–18pp above',{txt:'High LTV',cls:'mbadge-teal'}],
+      ['3–6 month customers',{txt:'74%',cls:'mbadge-green'},'↑ at benchmark',{txt:'Growing',cls:'mbadge-green'}],
+      ['Non-subscribers',{txt:'61%',cls:'mbadge-amber'},'↓ below avg',{txt:'⚠ At risk',cls:'mbadge-amber'}],
+      ['New (<30 days)',{txt:'52%',cls:'mbadge-red'},'↓ watch',{txt:'🔴 Priority',cls:'mbadge-red'}],
+    ],
+    vizTitle:'Retention by Segment',
+    vizBars:[
+      {name:'Subscribers — 88%',val:'88%',pct:100,col:'#00C896'},
+      {name:'3–6 month — 74%',val:'74%',pct:84,col:'#3D9CF5'},
+      {name:'Non-subscribers — 61%',val:'61%',pct:69,col:'#F5A623'},
+      {name:'New < 30 days — 52%',val:'52%',pct:59,col:'#FF4D6A'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>Overall retention at 78% is above the 70–75% industry benchmark.</strong> Subscriber retention at 88% is exceptional. Converting non-subscribers to subscribers is the single highest-leverage retention action.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>New customer retention at 52% is a concern.</strong> Almost half of new customers churn within 30 days. This is before they contribute meaningful LTV. Onboarding experience needs immediate attention.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Convert non-subscribers to subscribers as the top priority.</strong> The 27pp retention gap (88% vs 61%) means each subscription conversion adds ~₹600 in expected LTV per customer. Target non-subscribers with a subscription trial offer at Day 15.'},
+    ]
+  },
+  'churn':{
+    title:'Customer Churn Rate',icon:'📉',iconBg:'rgba(255,77,106,0.15)',
+    stats:[
+      {lbl:'Current Monthly Churn',val:'2.10%',sub:'↓ −0.3pp vs last month',col:'#00C896'},
+      {lbl:'Customers Lost This Month',val:'~948',sub:'Based on 2.1% of active base',col:'#FF4D6A'},
+      {lbl:'Revenue at Risk',val:'₹19.9L',sub:'948 customers × ₹2.1K avg LTV',col:'#F5A623'},
+    ],
+    chartTitle:'Monthly Churn Rate Trend',chartSub:'Lower is better — is churn declining consistently?',
+    chartType:'line',
+    chartData:{
+      labels:['Jan','Feb','Mar','Apr'],
+      datasets:[
+        {label:'Churn Rate',data:[2.8,2.6,2.4,2.1],borderColor:'#FF4D6A',backgroundColor:'rgba(255,77,106,0.07)',tension:0.4,pointRadius:5,fill:true},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v+'%',min:0,max:4}},
+    bkTitle:'Churn by Segment',
+    bkCols:['Segment','Churn Rate','Count','LTV at Risk','Priority'],
+    bkRows:[
+      ['High-value subscribers',{txt:'1.2%',cls:'mbadge-green'},'94',{txt:'₹9.4L',cls:'mbadge-red'},{txt:'🔴 Act now',cls:'mbadge-red'}],
+      ['Subscription lapsed',{txt:'18%',cls:'mbadge-red'},'256',{txt:'₹5.4L',cls:'mbadge-amber'},{txt:'Win-back flow',cls:'mbadge-amber'}],
+      ['New < 30 days',{txt:'48%',cls:'mbadge-red'},'412',{txt:'₹3.7L',cls:'mbadge-amber'},{txt:'2nd purchase nudge',cls:'mbadge-amber'}],
+      ['3–6 months',{txt:'8%',cls:'mbadge-amber'},'186',{txt:'₹1.5L',cls:'mbadge-amber'},{txt:'Re-engage',cls:'mbadge-amber'}],
+    ],
+    vizTitle:'Revenue at Risk by Segment',
+    vizBars:[
+      {name:'High-value (₹9.4L at risk)',val:'₹9.4L',pct:100,col:'#FF4D6A'},
+      {name:'Lapsed subs (₹5.4L at risk)',val:'₹5.4L',pct:57,col:'#F5A623'},
+      {name:'New churners (₹3.7L at risk)',val:'₹3.7L',pct:39,col:'#F472B6'},
+      {name:'3–6 months (₹1.5L at risk)',val:'₹1.5L',pct:16,col:'#3D9CF5'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>Churn has declined from 2.8% → 2.1% over 4 months</strong> — a 0.7pp improvement. This is meaningful: at 45K active customers, each 0.1pp reduction saves ~45 customers and ~₹94.5K in LTV per month.'},
+      {tag:'🔴 Risk',type:'risk',txt:'<strong>94 high-value customers showing 3+ missed renewals represent ₹9.4L in LTV risk.</strong> These customers have the highest individual value — losing them has outsized revenue impact even though they\'re a small count.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Personal outreach to 94 high-value at-risk customers this week.</strong> A dedicated account manager call or personalised email with a win-back offer at 20% off has historically recovered 40–50% of this segment. Estimated recovery: ₹3.8–4.7L.'},
+    ]
+  },
+  'clv':{
+    title:'Customer Lifetime Value',icon:'💎',iconBg:'rgba(244,114,182,0.15)',
+    stats:[
+      {lbl:'Avg CLV',val:'₹2.10K',sub:'↑ +5.1% vs last month',col:'#F472B6'},
+      {lbl:'Subscriber CLV',val:'₹3.40K',sub:'62% higher than non-subscriber',col:'#00C896'},
+      {lbl:'Highest CLV City',val:'Bengaluru',sub:'₹2.62K avg — tech-savvy, high intent',col:'#3D9CF5'},
+    ],
+    chartTitle:'CLV Growth Trend',chartSub:'Is average customer value increasing over time?',
+    chartType:'line',
+    chartData:{
+      labels:['Jan','Feb','Mar','Apr'],
+      datasets:[
+        {label:'Avg CLV',data:[1840,1920,1998,2100],borderColor:'#F472B6',backgroundColor:'rgba(244,114,182,0.07)',tension:0.4,pointRadius:5,fill:true},
+        {label:'Subscriber CLV',data:[2800,3000,3200,3400],borderColor:'#00C896',backgroundColor:'transparent',tension:0.4,pointRadius:5,borderDash:[4,3]},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>'₹'+(v/1000).toFixed(1)+'K'}},
+    bkTitle:'CLV by Segment',
+    bkCols:['Segment','Avg CLV','Orders','Avg Order','Trend'],
+    bkRows:[
+      ['Subscriber',{txt:'₹3.40K',cls:'mbadge-green'},'8.4x','₹404',{txt:'↑ growing',cls:'mbadge-green'}],
+      ['3–6 month',{txt:'₹1.92K',cls:'mbadge-teal'},'4.2x','₹457',{txt:'↑ stable',cls:'mbadge-green'}],
+      ['Non-subscriber',{txt:'₹980',cls:'mbadge-amber'},'2.1x','₹467',{txt:'→ flat',cls:'mbadge-amber'}],
+      ['New < 30 days',{txt:'₹346',cls:'mbadge-red'},'1.0x','₹346',{txt:'→ 1 purchase',cls:'mbadge-red'}],
+    ],
+    vizTitle:'CLV by Segment',
+    vizBars:[
+      {name:'Subscriber (₹3.40K)',val:'₹3.40K',pct:100,col:'#00C896'},
+      {name:'3–6 month (₹1.92K)',val:'₹1.92K',pct:57,col:'#3D9CF5'},
+      {name:'Non-subscriber (₹980)',val:'₹980',pct:29,col:'#F5A623'},
+      {name:'New customer (₹346)',val:'₹346',pct:10,col:'#FF4D6A'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>CLV growing 5.1% MoM — each customer is becoming more valuable.</strong> Subscriber CLV at ₹3.40K is 62% above average. The subscription model is proving to be the highest-value customer pathway.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>New customer CLV at ₹346 (single purchase) vs subscriber ₹3.40K is a 10x gap.</strong> Most new customers never reach their potential CLV because they churn after 1 purchase. The onboarding-to-subscription journey is leaky.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Design a clear pathway: New → Subscriber within 30 days.</strong> Subscription trial at Day 7 with an in-app prompt has shown 22% conversion rate in similar cohorts. Each successful trial convert adds ~₹3K in expected LTV.'},
+    ]
+  },
+  'clvcac':{
+    title:'CLV / CAC Ratio',icon:'⚖️',iconBg:'rgba(245,166,35,0.15)',
+    stats:[
+      {lbl:'Overall CLV:CAC Ratio',val:'4.1x',sub:'Above 3x benchmark — healthy',col:'#00C896'},
+      {lbl:'Best Channel (Google)',val:'13.6x',sub:'CLV ₹2.1K ÷ CAC ₹154',col:'#4285F4'},
+      {lbl:'Weakest Channel (Others)',val:'10.0x',sub:'CLV ₹2.1K ÷ CAC ₹210',col:'#7B6EF6'},
+    ],
+    chartTitle:'CLV:CAC Ratio by Channel',chartSub:'Which channels deliver the most valuable customers relative to acquisition cost?',
+    chartType:'bar',
+    chartData:{
+      labels:['Google','Meta','Others','Blended'],
+      datasets:[{label:'CLV:CAC',data:[13.6,11.6,10.0,4.1],backgroundColor:['rgba(66,133,244,0.75)','rgba(24,119,242,0.7)','rgba(123,110,246,0.7)','rgba(245,166,35,0.7)'],borderRadius:6,borderSkipped:false}]
+    },
+    chartOpts:{yL:{cb:v=>v+'x'}},
+    bkTitle:'Channel Efficiency Comparison',
+    bkCols:['Channel','CAC','Avg CLV','CLV:CAC','Trend'],
+    bkRows:[
+      ['Google Ads',{txt:'₹154',cls:'mbadge-green'},'₹2.10K',{txt:'13.6x',cls:'mbadge-green'},'↓ CAC improving'],
+      ['Facebook/Meta',{txt:'₹181',cls:'mbadge-amber'},'₹2.10K',{txt:'11.6x',cls:'mbadge-green'},'↑ CAC rising'],
+      ['Others',{txt:'₹210',cls:'mbadge-amber'},'₹2.10K',{txt:'10.0x',cls:'mbadge-teal'},'→ stable'],
+      ['Blended',{txt:'₹507',cls:'mbadge-amber'},'₹2.10K',{txt:'4.1x',cls:'mbadge-green'},'↑ improving'],
+    ],
+    vizTitle:'ROI Efficiency',
+    vizBars:[
+      {name:'Google (13.6x CLV:CAC)',val:'13.6x',pct:100,col:'#4285F4'},
+      {name:'Meta (11.6x CLV:CAC)',val:'11.6x',pct:85,col:'#1877F2'},
+      {name:'Others (10.0x CLV:CAC)',val:'10.0x',pct:74,col:'#7B6EF6'},
+      {name:'Blended (4.1x CLV:CAC)',val:'4.1x',pct:30,col:'#F5A623'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>All channels are above the 3x CLV:CAC benchmark.</strong> Google at 13.6x is outstanding. Every ₹1 spent acquiring a Google customer returns ₹13.60 in lifetime value.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>Facebook CAC rising from ₹158 → ₹181 over 4 months.</strong> If CLV stays constant, the ratio will fall below 10x within 3 months. Rising CAC on Meta is the single biggest threat to channel efficiency.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Shift 15–20% of Meta budget to Google</strong> where ROI is 17% higher. Also focus on growing CLV through subscriptions — a ₹200 increase in avg CLV would improve the blended ratio from 4.1x to 4.5x with no acquisition changes.'},
+    ]
+  },
+  'repeat-rate':{
+    title:'Repeat Purchase Rate',icon:'🛒',iconBg:'rgba(0,200,150,0.15)',
+    stats:[
+      {lbl:'Repeat Purchase Rate',val:'45%',sub:'↑ +3% vs last month',col:'#00C896'},
+      {lbl:'D2C Industry Avg',val:'25–30%',sub:'nyx.today is 15–20pp above avg',col:'#3D9CF5'},
+      {lbl:'Avg Days to 2nd Purchase',val:'18 days',sub:'Healthy — within 3 weeks',col:'#F472B6'},
+    ],
+    chartTitle:'Repeat Purchase Rate Trend',chartSub:'Is purchase frequency increasing over time?',
+    chartType:'line',
+    chartData:{
+      labels:['Jan','Feb','Mar','Apr'],
+      datasets:[
+        {label:'Repeat Rate',data:[36,39,42,45],borderColor:'#00C896',backgroundColor:'rgba(0,200,150,0.07)',tension:0.4,pointRadius:5,fill:true},
+        {label:'Industry Avg',data:[28,28,28,28],borderColor:'rgba(255,255,255,0.2)',backgroundColor:'transparent',tension:0,pointRadius:0,borderDash:[6,4]},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v+'%',min:0,max:60}},
+    bkTitle:'Purchase Frequency Distribution',
+    bkCols:['Purchase Count','% of Customers','Avg Order Value','Revenue Share'],
+    bkRows:[
+      ['1 purchase (new)','55%','₹346','28%'],
+      ['2 purchases',{txt:'20%',cls:'mbadge-amber'},'₹398','17%'],
+      ['3–5 purchases',{txt:'16%',cls:'mbadge-teal'},'₹420','19%'],
+      ['6+ purchases',{txt:'9%',cls:'mbadge-green'},'₹487','36%'],
+    ],
+    vizTitle:'Revenue by Purchase Frequency',
+    vizBars:[
+      {name:'6+ purchases — 36% of revenue',val:'36%',pct:100,col:'#00C896'},
+      {name:'1 purchase — 28% of revenue',val:'28%',pct:78,col:'#FF4D6A'},
+      {name:'3–5 purchases — 19% of revenue',val:'19%',pct:53,col:'#3D9CF5'},
+      {name:'2 purchases — 17% of revenue',val:'17%',pct:47,col:'#F5A623'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>Repeat rate at 45% is 15–20pp above D2C industry average.</strong> The 9% of customers making 6+ purchases generate 36% of all revenue — your power users are highly valuable. Protecting and growing this segment is critical.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>55% of customers have only made 1 purchase.</strong> The biggest opportunity is converting this group to 2 purchases. The 2-purchase threshold is where customers typically start forming a habit.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Focus the entire CRM on the 1→2 purchase conversion.</strong> Send a personalised offer at Day 14 post-purchase. The 2→3 transition is also critical — customers who make 3 purchases have an 82% chance of making a 4th.'},
+    ]
+  },
+  'new-vs-repeat':{
+    title:'New vs Repeat Subscribers',icon:'📊',iconBg:'rgba(0,200,150,0.15)',
+    stats:[
+      {lbl:'Current Split',val:'35:65',sub:'65% repeat — strong loyalty',col:'#00C896'},
+      {lbl:'Subscriber Base',val:'4.91K',sub:'Total active subscribers this month',col:'#F472B6'},
+      {lbl:'Subscription Revenue',val:'68%',sub:'68% of total revenue from subscribers',col:'#7B6EF6'},
+    ],
+    chartTitle:'New vs Repeat Subscriber Mix — Monthly',chartSub:'Is the subscriber base becoming more loyal over time?',
+    chartType:'bar',
+    chartData:{
+      labels:['Jan','Feb','Mar','Apr'],
+      datasets:[
+        {label:'New Subscribers',data:[1820,1920,1980,1718],backgroundColor:'rgba(0,200,150,0.6)',borderRadius:4,borderSkipped:false,stack:'s'},
+        {label:'Repeat Subscribers',data:[2840,3040,3280,3192],backgroundColor:'rgba(123,110,246,0.7)',borderRadius:4,borderSkipped:false,stack:'s'},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v>=1000?(v/1000).toFixed(1)+'K':v},stacked:true},
+    bkTitle:'Subscriber Behaviour',
+    bkCols:['Metric','New Subscribers','Repeat Subscribers','Difference'],
+    bkRows:[
+      ['Avg CLV','₹1.24K','₹3.40K',{txt:'+₹2.16K',cls:'mbadge-green'}],
+      ['Churn Rate','28%','8%',{txt:'−20pp',cls:'mbadge-green'}],
+      ['Avg Session Time','4.2 min','12.8 min',{txt:'+8.6 min',cls:'mbadge-teal'}],
+      ['Support Tickets','1.8/mo','0.4/mo',{txt:'−1.4',cls:'mbadge-green'}],
+    ],
+    vizTitle:'Value Difference: New vs Repeat',
+    vizBars:[
+      {name:'Repeat CLV (₹3.40K)',val:'₹3.40K',pct:100,col:'#7B6EF6'},
+      {name:'New Subscriber CLV (₹1.24K)',val:'₹1.24K',pct:36,col:'#00C896'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>65% of subscribers are repeat buyers — exceptional loyalty.</strong> Repeat subscribers have 2.7x higher CLV (₹3.40K vs ₹1.24K), 3.5x lower churn (8% vs 28%), and 3x longer sessions. Growing this segment is the highest-ROI activity.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>New subscriber share at 35% needs monitoring.</strong> If new subscriber acquisition slows while repeat churn is even modest, the total subscriber base will shrink. Net subscriber growth requires new subs to outpace churn.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Design a "New → Repeat" conversion journey.</strong> New subscribers who engage with 3+ features in their first week convert to repeat at 2.4x the rate. Build an onboarding checklist that surfaces 3 high-value features in Days 1–7.'},
+    ]
+  },
+};
+
+function openDrill(id){
+  const d=DRILL[id]; if(!d) return;
+  const m=document.getElementById('drill-modal');
+  const statsHtml=d.stats.map(s=>`
+    <div class="mstat">
+      <div class="mstat-lbl">${s.lbl}</div>
+      <div class="mstat-val" style="color:${s.col||'#F0EEF8'}">${s.val}</div>
+      <div class="mstat-sub">${s.sub}</div>
+    </div>`).join('');
+  const tableHtml=`<table class="modal-table">
+    <thead><tr>${d.bkCols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${d.bkRows.map(r=>`<tr>${r.map(cell=>{
+      if(typeof cell==='object'&&cell.cls) return `<td><span class="mbadge ${cell.cls}">${cell.txt}</span></td>`;
+      return `<td>${cell}</td>`;
+    }).join('')}</tr>`).join('')}</tbody></table>`;
+  const barsHtml=`<div class="prog-row">${d.vizBars.map(b=>`
+    <div class="prog-item">
+      <div class="prog-top"><span class="prog-name">${b.name}</span><span class="prog-val">${b.val}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${b.pct}%;background:${b.col}"></div></div>
+    </div>`).join('')}</div>`;
+  const insightHtml=d.insights.map(i=>`
+    <div class="modal-iitem">
+      <div class="modal-itag ${i.type==='win'?'itag-win':i.type==='risk'?'itag-risk':'itag-action'}">${i.tag}</div>
+      <div class="modal-itext">${i.txt}</div>
+    </div>`).join('');
+  m.innerHTML=`
+    <div class="modal-hdr">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="modal-icon" style="background:${d.iconBg}">${d.icon}</div>
+        <div><div class="modal-title">${d.title}</div><div class="modal-sub">Drill-down · Customer</div></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-period-row">
+      <div class="mpicker">
+        ${['Today','7D','30D','MTD','YTD'].map((l,i)=>`<button class="mpb ${i===2?'active':''}" onclick="this.closest('.mpicker').querySelectorAll('.mpb').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${l}</button>`).join('')}
+      </div>
+      <span style="font-size:10px;color:var(--text-3)">Viewing: ${d.title}</span>
+    </div>
+    <div class="modal-stats">${statsHtml}</div>
+    <div class="modal-divider"></div>
+    <div class="modal-chart-sec">
+      <div class="modal-chart-title">${d.chartTitle}</div>
+      <div class="modal-chart-sub">${d.chartSub}</div>
+      <div class="modal-chart-wrap"><canvas id="drill-chart"></canvas></div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-two-col">
+      <div class="modal-col-card"><div class="modal-col-title">${d.bkTitle}</div>${tableHtml}</div>
+      <div class="modal-col-card"><div class="modal-col-title">${d.vizTitle}</div>${barsHtml}</div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-insight">
+      <div class="modal-insight-hdr"><div class="modal-insight-badge">🧠 Customer Intelligence</div></div>
+      <div class="modal-insight-grid">${insightHtml}</div>
+    </div>`;
+  document.getElementById('drill-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  requestAnimationFrame(()=>{
+    if(activeDrillChart){activeDrillChart.destroy();activeDrillChart=null;}
+    const ctx=document.getElementById('drill-chart'); if(!ctx) return;
+    const o=d.chartOpts||{};
+    const isStacked=o.stacked||false;
+    activeDrillChart=new Chart(ctx,{
+      type:d.chartType,
+      data:d.chartData,
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...tip2}},
+        scales:{
+          yL:{position:'left',grid:{color:gc2},ticks:{color:tc2,font:{size:10},callback:o.yL?.cb||(v=>v)},border:{display:false},stacked:isStacked,...(o.yL?.min!==undefined?{min:o.yL.min}:{}),...(o.yL?.max!==undefined?{max:o.yL.max}:{})},
+          yR:{display:false},
+          x:{grid:{color:gc2},ticks:{color:tc2,font:{size:10}},border:{display:false},stacked:isStacked}
+        }
+      }
+    });
+  });
+}
+
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('drill-overlay')) return;
+  document.getElementById('drill-overlay').classList.remove('open');
+  document.body.style.overflow='';
+  if(activeDrillChart){activeDrillChart.destroy();activeDrillChart=null;}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+/* ══════════════════════════════════════════════════
+   CAC TREND CHART
+══════════════════════════════════════════════════ */
+new Chart(document.getElementById('cacTrendChart'),{
+  type:'line',
+  data:{
+    labels:['Jan','Feb','Mar','Apr'],
+    datasets:[
+      {label:'Google',data:[172,168,162,154],borderColor:'#4285F4',backgroundColor:'rgba(66,133,244,0.06)',tension:0.4,pointRadius:4,pointBackgroundColor:'#4285F4',fill:true},
+      {label:'Facebook',data:[158,164,169,181],borderColor:'#1877F2',backgroundColor:'transparent',tension:0.4,pointRadius:4,pointBackgroundColor:'#1877F2'},
+      {label:'Others',data:[214,212,210,210],borderColor:'#7B6EF6',backgroundColor:'transparent',tension:0.4,pointRadius:4,pointBackgroundColor:'#7B6EF6'},
+      {label:'Blended',data:[540,525,514,507],borderColor:'rgba(255,255,255,0.25)',borderDash:[5,4],backgroundColor:'transparent',tension:0.4,pointRadius:3,yAxisID:'yBlended'},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>`${c.dataset.label}: ₹${c.parsed.y}`}}},
+    scales:{
+      y:{grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>'₹'+v},border:{display:false},min:100,max:250},
+      yBlended:{position:'right',grid:{display:false},ticks:{color:'rgba(255,255,255,0.2)',font:{size:9},callback:v=>'₹'+v},border:{display:false},min:440,max:600},
+      x:{grid:{color:gc},ticks:{color:tc,font:{size:10}},border:{display:false}}
+    }
+  }
+});
+
+/* CAC Source Donut */
+new Chart(document.getElementById('cacSourceChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Google Ads','Facebook/Meta','Others'],
+    datasets:[{
+      data:[8100,6200,4980],
+      backgroundColor:['rgba(66,133,244,0.8)','rgba(24,119,242,0.8)','rgba(123,110,246,0.8)'],
+      borderColor:['#4285F4','#1877F2','#7B6EF6'],
+      borderWidth:2,hoverOffset:6
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,cutout:'62%',
+    plugins:{
+      legend:{display:true,position:'bottom',labels:{color:tc,font:{size:10},padding:12,usePointStyle:true,pointStyleWidth:8}},
+      tooltip:{...tip,callbacks:{label:c=>`${c.label}: ${c.parsed.toLocaleString()} customers`}}
+    }
+  }
+});
+
+/* ══════════════════════════════════════════════════
+   COHORT DATA
+══════════════════════════════════════════════════ */
+
+// New Customer Cohort — retention %
+const NEW_COHORT={
+  churnRates:['30%','26%','22%','18%','16%','13%','10%','10%','10%'],
+  months:['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Mar'],
+  cols:['M0','M1','M2','M3','M4','M5','M6','M7','M8'],
+  data:[
+    {month:'Apr', vals:[100,20,17,14,12,10,9,7,7]},
+    {month:'May', vals:[100,25,21,20,17,14,12,9,9]},
+    {month:'Jun', vals:[100,25,21,20,17,14,10,8,8]},
+    {month:'Jul', vals:[100,30,26,24,20,17,12,10,10]},
+    {month:'Aug', vals:[100,30,26,24,22,19,13,11,11]},
+    {month:'Sep', vals:[100,30,26,24,22,19,13,11,11]},
+    {month:'Oct', vals:[100,30,26,24,22,19,13,11,11]},
+    {month:'Nov', vals:[100,30,26,24,22,19,16,13,13]},
+    {month:'Dec', vals:[100,35,30,23,22,19,16,13,13]},
+    {month:'Jan', vals:[100,35,30,23,22,19,16,13,13]},
+    {month:'Feb', vals:[100,40,34,26,25,21,18,15,15]},
+    {month:'Mar', vals:[100,40,34,26,25,21,18,15,15]},
+  ]
+};
+
+// Repeat Customer Cohort — absolute numbers
+const REPEAT_COHORT={
+  churnRates:['30%','26%','22%','20%','16%','13%','10%','10%'],
+  months:['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov'],
+  base:[26000,18200,13559,10620,8496,7166,6212,5591],
+  data:[
+    {month:'Apr',  vals:[null,1840,1564,1329,1130,960,816,613]},
+    {month:'May',  vals:[null,null,7550,6418,6040,5134,4364,3709]},
+    {month:'Jun',  vals:[null,null,null,14225,12091,11380,9673,8222]},
+    {month:'Jul',  vals:[null,null,null,null,21690,18437,17352,14749]},
+    {month:'Aug',  vals:[null,null,null,null,null,28950,24608,23160]},
+    {month:'Sep',  vals:[null,null,null,null,null,null,30600,26010]},
+    {month:'Oct',  vals:[null,null,null,null,null,null,null,43770]},
+    {month:'Nov',  vals:[null,null,null,null,null,null,null,null]},
+  ],
+  totals:[26000,20040,22673,32592,49447,72027,93625,125824]
+};
+
+function retClass(v){
+  if(v===null||v===undefined) return '';
+  if(v>=80) return 'ret-100';
+  if(v>=60) return 'ret-80';
+  if(v>=40) return 'ret-60';
+  if(v>=20) return 'ret-40';
+  if(v>=10) return 'ret-20';
+  return 'ret-10';
+}
+
+function buildNewCohortTable(){
+  const {cols,data}=NEW_COHORT;
+  let html=`<thead>
+    <tr>
+      <th class="col-month" style="min-width:80px">Acquisition Month</th>
+      ${cols.map((c,i)=>`<th class="${i===0?'col-m0':'col-mx'}">${c}</th>`).join('')}
+    </tr>
+  </thead><tbody>`;
+  data.forEach(row=>{
+    html+=`<tr><td class="col-month">${row.month}</td>`;
+    row.vals.forEach((v,i)=>{
+      const cls=i===0?'col-m0 ret-100':retClass(v);
+      html+=`<td class="${cls}">${v===null?'—':v+'%'}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody>';
+  document.getElementById('new-cohort-table').innerHTML=html;
+}
+
+function buildRepeatCohortTable(){
+  const {months,base,data,totals}=REPEAT_COHORT;
+  let html=`<thead>
+    <tr>
+      <th class="col-month" style="min-width:80px">Acquisition Month</th>
+      <th class="col-mx" style="color:var(--purple)">Base</th>
+      ${months.map(m=>`<th class="col-mx">Active in ${m}</th>`).join('')}
+    </tr>
+  </thead><tbody>`;
+  data.forEach((row,ri)=>{
+    html+=`<tr><td class="col-month">${row.month}</td><td class="col-base">${base[ri]?.toLocaleString()||'—'}</td>`;
+    row.vals.forEach(v=>{
+      html+=`<td style="${v?'color:var(--text-2)':''}">${v===null?'—':v.toLocaleString()}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+=`<tr class="total-row"><td class="col-month">Total Repeat</td><td class="col-base"></td>`;
+  totals.forEach(t=>{ html+=`<td>${t.toLocaleString()}</td>`; });
+  html+='</tr></tbody>';
+  document.getElementById('repeat-cohort-table').innerHTML=html;
+}
+
+function switchCohort(type,btn){
+  document.querySelectorAll('.cohort-tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('cohort-panel-new').style.display=type==='new'?'block':'none';
+  document.getElementById('cohort-panel-repeat').style.display=type==='repeat'?'block':'none';
+}
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+buildNewCohortTable();
+buildRepeatCohortTable();
+</script>
+</body>
+</html>

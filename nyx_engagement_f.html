@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>nyx.today — Traffic & Acquisition</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#090812;--bg-card:#100E1F;--bg-elevated:#161328;--bg-header:#1A1730;
+  --border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,0.14);
+  --text:#F0EEF8;--text-2:#8B87A8;--text-3:#5A566E;
+  --green:#00C896;--green-dim:rgba(0,200,150,0.12);
+  --red:#FF4D6A;--red-dim:rgba(255,77,106,0.1);
+  --amber:#F5A623;--amber-dim:rgba(245,166,35,0.1);
+  --purple:#7B6EF6;--purple-dim:rgba(123,110,246,0.1);
+  --blue:#3D9CF5;--teal:#06B6D4;
+  --r:10px;--r-sm:6px;--r-lg:14px;
+}
+body{
+  background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);
+  min-height:100vh;padding:24px;
+  background-image:
+    radial-gradient(ellipse 60% 35% at 80% -5%,rgba(6,182,212,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 30% at 10% 10%,rgba(123,110,246,0.06) 0%,transparent 60%);
+}
+button,select{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;outline:none}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#7B6EF6,#00C896);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+.brand-name{font-size:17px;font-weight:700;letter-spacing:-0.3px}
+.brand-sub{font-size:11px;color:var(--text-2);margin-top:1px}
+.tab-nav{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);padding:4px;gap:2px}
+.tab-btn{padding:7px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s;white-space:nowrap}
+.tab-btn.active{background:var(--teal);color:#fff;box-shadow:0 2px 14px rgba(6,182,212,0.35)}
+.tab-btn:hover:not(.active):not(:disabled){color:var(--text)}
+.tab-btn:disabled{opacity:0.35;cursor:not-allowed}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;padding:5px 12px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
+/* ── PERIOD ── */
+.period-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.period-picker{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);padding:4px;gap:2px}
+.period-btn{padding:7px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s;white-space:nowrap}
+.period-btn.active{background:var(--teal);color:#fff;box-shadow:0 2px 12px rgba(6,182,212,0.35)}
+.period-btn:hover:not(.active){color:var(--text)}
+.period-badge{font-size:11px;color:var(--text-2);background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;padding:4px 12px}
+.period-badge span{color:var(--teal);font-weight:600}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+.kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 17px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.2s}
+.kpi-card:hover{transform:translateY(-2px);border-color:var(--border-bright);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r-lg) var(--r-lg) 0 0;opacity:0;transition:opacity 0.2s}
+.kpi-card:hover::before{opacity:1}
+.kpi-card.up::before{background:linear-gradient(90deg,var(--green),transparent)}
+.kpi-card.warn::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.kpi-card.down::before{background:linear-gradient(90deg,var(--red),transparent)}
+.kpi-card.teal::before{background:linear-gradient(90deg,var(--teal),transparent)}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:11px}
+.kpi-label{font-size:10px;color:var(--text-2);font-weight:500;line-height:1.4;max-width:80px}
+.kpi-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.kpi-value{font-size:21px;font-weight:700;letter-spacing:-0.5px;line-height:1;margin-bottom:5px}
+.kpi-delta{font-size:11px;font-weight:500;margin-bottom:2px}
+.kpi-vs{font-size:9px;color:var(--text-3)}
+.delta-up{color:var(--green)}.delta-warn{color:var(--amber)}.delta-down{color:var(--red)}.delta-teal{color:var(--teal)}
+.drill-hint{position:absolute;bottom:9px;right:11px;font-size:9px;color:var(--text-3);opacity:0;transition:opacity 0.2s}
+.kpi-card:hover .drill-hint{opacity:1}
+
+/* ── SECTION LABEL ── */
+.sec-lbl{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;flex-wrap:wrap;gap:8px}
+.sec-lbl-left{display:flex;align-items:center;gap:7px}
+.sec-dot{width:7px;height:7px;border-radius:2px}
+.sec-title{font-size:13px;font-weight:600}
+.sec-sub-lbl{font-size:10px;color:var(--text-3)}
+
+/* ── CHART CARD ── */
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;transition:border-color 0.2s}
+.chart-card:hover{border-color:var(--border-bright)}
+.chart-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.chart-title{font-size:13px;font-weight:600;color:var(--text)}
+.chart-sub{font-size:10px;color:var(--text-2);margin-top:3px}
+.ctrl-sel{padding:5px 10px;border-radius:var(--r-sm);font-size:11px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-2);transition:border-color 0.15s}
+.ctrl-sel:hover{border-color:var(--border-bright)}
+.chart-wrap{position:relative}
+.chart-note{font-size:10px;color:var(--text-3);margin-top:8px}
+.chart-legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
+.cl-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-2)}
+.cl-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ── MAIN CHARTS GRID ── */
+.charts-top{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:900px){.charts-top{grid-template-columns:1fr}}
+
+/* ══════════════════════════════════════
+   RETENTION COHORT TABLE
+══════════════════════════════════════ */
+.cohort-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:14px;transition:border-color 0.2s}
+.cohort-card:hover{border-color:var(--border-bright)}
+.cohort-table-wrap{overflow-x:auto;margin-top:14px}
+.cohort-table{border-collapse:collapse;font-size:11px;min-width:600px;width:100%}
+.cohort-table th{padding:8px 10px;font-size:10px;color:var(--purple);font-weight:600;text-align:center;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;background:rgba(255,255,255,0.01)}
+.cohort-table th:first-child{text-align:left}
+.cohort-table td{padding:9px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.03);font-family:'DM Mono',monospace;font-size:11px;border-right:1px solid rgba(255,255,255,0.03)}
+.cohort-table td:first-child{text-align:left;font-family:'DM Sans',sans-serif;font-weight:500;color:var(--text);border-right:1px solid var(--border)}
+.cohort-table tr:last-child td{border-bottom:none}
+.cohort-table tr:hover td{background:rgba(255,255,255,0.015)}
+/* Week 2 column — subtle column tint only */
+.cohort-table th.week2-col{color:var(--red)!important;background:rgba(255,77,106,0.08)!important}
+.cohort-table td.week2-cell{background:rgba(255,77,106,0.06)!important}
+/* Single annotation chip below table */
+.cohort-annotation{display:none;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.cohort-annotation.visible{display:flex}
+.ca-chip{display:inline-flex;align-items:center;gap:6px;background:rgba(255,77,106,0.08);border:1px solid rgba(255,77,106,0.22);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--red);font-weight:500;cursor:pointer;transition:all 0.15s;user-select:none}
+.ca-chip:hover{background:rgba(255,77,106,0.14)}
+.ca-chip-arrow{font-size:10px;transition:transform 0.2s}
+.ca-chip-arrow.open{transform:rotate(180deg)}
+.ca-detail{display:none;width:100%;background:rgba(255,77,106,0.05);border:1px solid rgba(255,77,106,0.15);border-radius:var(--r);padding:12px 14px;font-size:11px;color:var(--text-2);line-height:1.7;animation:fadeIn 0.18s ease}
+.ca-detail.visible{display:block}
+.ca-detail strong{color:var(--text)}
+/* Heat map cells */
+.c-100{background:rgba(6,182,212,0.75);color:#fff;font-weight:700;border-radius:4px}
+.c-80{background:rgba(6,182,212,0.5);color:#fff;font-weight:600}
+.c-60{background:rgba(6,182,212,0.32);color:var(--text)}
+.c-40{background:rgba(6,182,212,0.18);color:var(--text-2)}
+.c-25{background:rgba(6,182,212,0.1);color:var(--text-2)}
+.c-15{background:rgba(6,182,212,0.05);color:var(--text-3)}
+.c-na{color:var(--text-3);font-size:10px}
+.cohort-legend{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.cohort-leg-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-2)}
+.cohort-leg-dot{width:14px;height:14px;border-radius:3px}
+
+/* ══════════════════════════════════════
+   PLATFORM BREAKDOWN
+══════════════════════════════════════ */
+.platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+@media(max-width:800px){.platform-grid{grid-template-columns:1fr}}
+.plat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;transition:all 0.2s;position:relative;overflow:hidden}
+.plat-card:hover{border-color:var(--border-bright);transform:translateY(-1px)}
+.plat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r-lg) var(--r-lg) 0 0}
+.plat-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.plat-name-row{display:flex;align-items:center;gap:8px}
+.plat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.plat-name{font-size:14px;font-weight:700}
+.plat-share-badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px}
+.plat-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.plat-stat{background:var(--bg-elevated);border-radius:var(--r-sm);padding:9px 11px}
+.plat-stat-lbl{font-size:9px;color:var(--text-3);margin-bottom:3px;font-weight:500;text-transform:uppercase;letter-spacing:0.04em}
+.plat-stat-val{font-size:15px;font-weight:700;letter-spacing:-0.3px}
+.plat-stat-sub{font-size:9px;color:var(--text-3);margin-top:2px}
+.plat-bar-section{}
+.plat-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text-2);margin-bottom:4px}
+.plat-track{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.plat-fill{height:100%;border-radius:3px;transition:width 0.7s ease}
+.plat-insight{margin-top:10px;padding:8px 10px;border-radius:var(--r-sm);font-size:10px;line-height:1.5}
+
+/* ══════════════════════════════════════
+   SESSION ACTIVITY TABLE
+══════════════════════════════════════ */
+.activity-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:800px){.activity-grid{grid-template-columns:1fr}}
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{padding:9px 12px;font-size:10px;color:var(--teal);text-align:left;font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.04em;background:rgba(255,255,255,0.01);white-space:nowrap}
+.data-table td{padding:10px 12px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(255,255,255,0.02)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600}
+.pill-green{background:rgba(0,200,150,0.12);color:var(--green)}
+.pill-amber{background:rgba(245,166,35,0.12);color:var(--amber)}
+.pill-red{background:rgba(255,77,106,0.12);color:var(--red)}
+.pill-blue{background:rgba(61,156,245,0.12);color:var(--blue)}
+.pill-teal{background:rgba(6,182,212,0.12);color:var(--teal)}
+.mini-bar-wrap{display:flex;align-items:center;gap:7px}
+.mini-track{width:60px;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;flex-shrink:0}
+.mini-fill{height:100%;border-radius:2px}
+
+/* ── AUG TOGGLE BUTTONS ── */
+.aug-btn{padding:4px 9px;border-radius:4px;font-size:10px;font-weight:600;color:var(--text-2);background:transparent;transition:all 0.15s;cursor:pointer;border:none}
+.aug-btn.active{background:var(--teal);color:#fff}
+.aug-btn:hover:not(.active){color:var(--text)}
+.gauge-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+@media(max-width:700px){.gauge-row{grid-template-columns:1fr}}
+.gauge-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;text-align:center;transition:border-color 0.2s}
+.gauge-card:hover{border-color:var(--border-bright)}
+.gauge-label{font-size:10px;color:var(--text-2);font-weight:500;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em}
+.gauge-value{font-size:28px;font-weight:700;letter-spacing:-0.8px;margin-bottom:4px}
+.gauge-bench{font-size:10px;color:var(--text-3);margin-bottom:10px}
+.gauge-bar-wrap{height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.gauge-bar{height:100%;border-radius:3px}
+.gauge-status{font-size:10px;font-weight:600;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px}
+
+/* ── DRILL-DOWN MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,4,15,0.88);backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#12102A;border:1px solid rgba(255,255,255,0.1);border-radius:18px;width:100%;max-width:900px;max-height:92vh;overflow-y:auto;position:relative;box-shadow:0 40px 100px rgba(0,0,0,0.7);animation:modalIn 0.22s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-hdr{padding:22px 26px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.modal-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.modal-title{font-size:19px;font-weight:700;letter-spacing:-0.3px}
+.modal-sub{font-size:11px;color:var(--text-2);margin-top:3px}
+.modal-close{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:var(--text-2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;flex-shrink:0}
+.modal-close:hover{background:rgba(255,77,106,0.15);color:var(--red);border-color:var(--red)}
+.modal-period-row{display:flex;align-items:center;gap:8px;padding:14px 26px;flex-wrap:wrap}
+.mpicker{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px}
+.mpb{padding:5px 12px;border-radius:5px;font-size:11px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s;cursor:pointer;border:none}
+.mpb:hover{color:var(--text)}
+.mpb.active{background:var(--teal);color:#fff}
+.modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 26px 18px}
+.mstat{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.mstat-lbl{font-size:10px;color:var(--text-2);margin-bottom:6px;font-weight:500}
+.mstat-val{font-size:21px;font-weight:700;letter-spacing:-0.4px;margin-bottom:3px}
+.mstat-sub{font-size:10px;color:var(--text-3)}
+.modal-divider{height:1px;background:var(--border);margin:0 26px 18px}
+.modal-chart-sec{padding:0 26px 18px}
+.modal-chart-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px}
+.modal-chart-sub{font-size:10px;color:var(--text-2);margin-bottom:12px}
+.modal-chart-wrap{position:relative;height:200px}
+.modal-two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 26px 18px}
+@media(max-width:680px){.modal-two-col{grid-template-columns:1fr}}
+.modal-col-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.modal-col-title{font-size:10px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.modal-table{width:100%;border-collapse:collapse;font-size:12px}
+.modal-table th{padding:7px 10px;font-size:10px;color:var(--teal);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.04em;text-align:left}
+.modal-table td{padding:9px 10px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.03)}
+.modal-table tr:last-child td{border-bottom:none}
+.modal-table tr:hover td{background:rgba(255,255,255,0.02)}
+.modal-insight{margin:0 26px 22px;background:linear-gradient(135deg,rgba(6,182,212,0.07),rgba(123,110,246,0.04));border:1px solid rgba(6,182,212,0.2);border-radius:12px;padding:14px 16px}
+.modal-insight-hdr{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.modal-insight-badge{font-size:10px;font-weight:700;color:var(--teal);background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:20px;padding:2px 10px;text-transform:uppercase;letter-spacing:0.04em}
+.modal-insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:680px){.modal-insight-grid{grid-template-columns:1fr}}
+.modal-iitem{background:rgba(0,0,0,0.25);border-radius:8px;padding:10px 12px;border:1px solid rgba(255,255,255,0.04)}
+.modal-itag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.modal-itext{font-size:11px;color:var(--text-2);line-height:1.6}
+.modal-itext strong{color:var(--text)}
+.prog-row{display:flex;flex-direction:column;gap:10px}
+.prog-item .prog-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.prog-name{color:var(--text);font-weight:500}
+.prog-val{color:var(--text-2);font-family:'DM Mono',monospace;font-size:10px}
+.prog-track{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px}
+.mbadge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.mbadge-green{background:rgba(0,200,150,0.15);color:var(--green)}
+.mbadge-red{background:rgba(255,77,106,0.15);color:var(--red)}
+.mbadge-amber{background:rgba(245,166,35,0.15);color:var(--amber)}
+.mbadge-teal{background:rgba(6,182,212,0.15);color:var(--teal)}
+.insight-panel{background:linear-gradient(135deg,rgba(6,182,212,0.07),rgba(123,110,246,0.04));border:1px solid rgba(6,182,212,0.2);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:16px}
+.insight-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.insight-badge{font-size:10px;font-weight:700;color:var(--teal);background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);border-radius:20px;padding:3px 10px;text-transform:uppercase;letter-spacing:0.04em}
+.insight-ts{font-size:10px;color:var(--text-3)}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:700px){.insight-grid{grid-template-columns:1fr}}
+.insight-item{background:rgba(0,0,0,0.2);border-radius:var(--r-sm);padding:12px 14px;border:1px solid rgba(255,255,255,0.04)}
+.itag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+.itag-win{color:var(--green)}.itag-risk{color:var(--red)}.itag-action{color:var(--amber)}
+.itext{font-size:11px;color:var(--text-2);line-height:1.65}
+.itext strong{color:var(--text);font-weight:600}
+
+/* ── FOOTER ── */
+.dash-footer{display:flex;gap:18px;padding:12px 18px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-lg);flex-wrap:wrap}
+.df-item{font-size:11px;color:var(--text-2)}.df-item span{color:var(--text);font-weight:600}
+.df-div{width:1px;background:var(--border);flex-shrink:0}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.kpi-card{animation:fadeUp 0.4s ease both}
+.kpi-card:nth-child(1){animation-delay:.04s}.kpi-card:nth-child(2){animation-delay:.08s}
+.kpi-card:nth-child(3){animation-delay:.12s}.kpi-card:nth-child(4){animation-delay:.16s}
+.kpi-card:nth-child(5){animation-delay:.20s}.kpi-card:nth-child(6){animation-delay:.24s}
+</style>
+</head>
+<body>
+
+<!-- ═══ DRILL-DOWN MODAL ══════════════════════════════════════════ -->
+<div class="modal-overlay" id="drill-overlay" onclick="closeModal(event)">
+  <div class="modal" id="drill-modal"></div>
+</div>
+
+<!-- ═══ TOPBAR ════════════════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">nx</div>
+    <div><div class="brand-name">nyx.today</div><div class="brand-sub">Traffic & Acquisition — Tab 4</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div class="tab-nav">
+      <button class="tab-btn">🎯 Executive</button>
+      <button class="tab-btn">📦 Revenue</button>
+      <button class="tab-btn">📣 Marketing</button>
+      <button class="tab-btn active">🚦 Traffic & Acquisition</button>
+      <button class="tab-btn" disabled>❤️ Customer</button>
+      <button class="tab-btn" disabled>💰 Budget</button>
+    </div>
+    <div class="live-pill"><div class="live-dot"></div>Live · 2 min ago</div>
+  </div>
+</div>
+
+<!-- ═══ PERIOD PICKER ════════════════════════════════════════════ -->
+<div class="period-row">
+  <div class="period-picker">
+    <button class="period-btn" onclick="setPeriod('today',this)">Today</button>
+    <button class="period-btn" onclick="setPeriod('7d',this)">7 Days</button>
+    <button class="period-btn active" onclick="setPeriod('30d',this)">30 Days</button>
+    <button class="period-btn" onclick="setPeriod('mtd',this)">MTD</button>
+    <button class="period-btn" onclick="setPeriod('ytd',this)">YTD</button>
+  </div>
+  <div class="period-badge">Viewing: <span id="period-label">Last 30 Days</span></div>
+</div>
+
+<!-- ═══ KPI CARDS ════════════════════════════════════════════════ -->
+<div class="sec-lbl">
+  <div class="sec-lbl-left">
+    <div class="sec-dot" style="background:var(--teal)"></div>
+    <span class="sec-title">Traffic & Acquisition</span>
+    <span class="sec-sub-lbl">— User acquisition, engagement metrics, and session analysis</span>
+  </div>
+  <span style="font-size:10px;color:var(--text-3)">🔍 Click any card to drill down</span>
+</div>
+
+<!-- ROW 1: Merged DAU/WAU/MAU card + 3 standard cards -->
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px" id="kpi-row-1">
+
+  <!-- MERGED: DAU / WAU / MAU with toggle -->
+  <div class="kpi-card up" style="padding:15px 17px" onclick="openDrill('active-users')" >
+    <div class="kpi-top" style="margin-bottom:8px">
+      <div style="font-size:10px;color:var(--text-2);font-weight:500">Active Users</div>
+      <div style="display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:2px;gap:2px">
+        <button id="aug-dau" class="aug-btn active" onclick="switchAUG('dau')">DAU</button>
+        <button id="aug-wau" class="aug-btn" onclick="switchAUG('wau')">WAU</button>
+        <button id="aug-mau" class="aug-btn" onclick="switchAUG('mau')">MAU</button>
+      </div>
+    </div>
+    <div class="kpi-value" id="aug-value" style="font-size:24px">326.8K</div>
+    <div class="kpi-delta delta-up" id="aug-delta">↑ +7.2%</div>
+    <div class="kpi-vs" id="aug-vs">vs yesterday</div>
+    <!-- Sub row: DAU:MAU ratio -->
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:9px;color:var(--text-3)">DAU:MAU <span style="color:var(--amber);font-weight:700">6.2%</span></span>
+        <span style="font-size:9px;color:var(--text-3)">WAU:MAU <span style="color:var(--green);font-weight:700">38.4%</span></span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:25%;background:var(--amber);border-radius:2px"></div>
+      </div>
+      <div style="font-size:9px;color:var(--text-3);margin-top:3px">benchmark 15–25%</div>
+    </div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+
+  <div class="kpi-card up" onclick="openDrill('sessions')">
+    <div class="kpi-top"><div class="kpi-label">Daily Sessions</div><div class="kpi-icon" style="background:rgba(123,110,246,0.12)">📱</div></div>
+    <div class="kpi-value">408.5K</div>
+    <div class="kpi-delta delta-up">↑ +6.8%</div>
+    <div class="kpi-vs">vs yesterday</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+
+  <!-- Daily Installs -->
+  <div class="kpi-card up" onclick="openDrill('installs')">
+    <div class="kpi-top"><div class="kpi-label">Daily Installs</div><div class="kpi-icon" style="background:rgba(0,200,150,0.12)">📲</div></div>
+    <div class="kpi-value">70.3K</div>
+    <div class="kpi-delta delta-up">↑ +5.4%</div>
+    <div class="kpi-vs">vs yesterday</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+
+  <!-- Bounce Rate -->
+  <div class="kpi-card up" onclick="openDrill('bounce')">
+    <div class="kpi-top"><div class="kpi-label">Bounce Rate</div><div class="kpi-icon" style="background:rgba(61,156,245,0.12)">↩️</div></div>
+    <div class="kpi-value">32%</div>
+    <div class="kpi-delta delta-up">↓ −2%</div>
+    <div class="kpi-vs">↑ healthy trend</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+</div>
+
+<!-- ROW 2: Session quality + platform cards -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:14px" id="kpi-row-2">
+
+  <!-- Time on Site -->
+  <div class="kpi-card up" onclick="openDrill('time-on-site')">
+    <div class="kpi-top"><div class="kpi-label">Time on Site</div><div class="kpi-icon" style="background:rgba(6,182,212,0.12)">⏱️</div></div>
+    <div class="kpi-value">272 sec</div>
+    <div class="kpi-delta delta-up">↑ +4.5 min avg</div>
+    <div class="kpi-vs">vs last period</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+
+  <!-- Pages per Session -->
+  <div class="kpi-card up" onclick="openDrill('pages-session')">
+    <div class="kpi-top"><div class="kpi-label">Pages per Session</div><div class="kpi-icon" style="background:rgba(245,166,35,0.12)">📄</div></div>
+    <div class="kpi-value">3.20</div>
+    <div class="kpi-delta delta-up">↑ healthy</div>
+    <div class="kpi-vs">industry avg 3–5</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+
+  <!-- Avg Active Time Spent -->
+  <div class="kpi-card up" style="background:#0A2420;border-color:var(--green)" onclick="openDrill('active-time')">
+    <div class="kpi-top"><div class="kpi-label" style="color:var(--green-dim)">Avg Active Time Spent</div><div class="kpi-icon" style="background:rgba(0,200,150,0.15)">🕐</div></div>
+    <div class="kpi-value" style="color:var(--green)">3.55 min</div>
+    <div class="kpi-delta delta-up">↑ new · session depth</div>
+    <div class="kpi-vs">per active user</div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+
+  <!-- Platform Split -->
+  <div class="kpi-card teal" style="background:#0A1A2A;border-color:var(--teal)" onclick="openDrill('platform-split')">
+    <div class="kpi-top" style="margin-bottom:8px">
+      <div class="kpi-label" style="color:var(--teal);max-width:100%">Platform Split</div>
+      <div class="kpi-icon" style="background:rgba(6,182,212,0.15)">📊</div>
+    </div>
+    <div style="font-size:17px;font-weight:700;letter-spacing:-0.3px;color:var(--teal);margin-bottom:8px">Web / Android / iOS</div>
+    <!-- mini split bars -->
+    <div style="display:flex;gap:2px;height:6px;border-radius:3px;overflow:hidden;margin-bottom:6px">
+      <div style="flex:69;background:var(--blue)"></div>
+      <div style="flex:30.5;background:var(--green)"></div>
+      <div style="flex:0.5;background:var(--teal)"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-3)">
+      <span style="color:var(--blue)">🌐 69%</span>
+      <span style="color:var(--green)">🤖 30.5%</span>
+      <span style="color:var(--teal)">🍎 0.5%</span>
+    </div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(6,182,212,0.15)">
+      <div style="font-size:9px;color:var(--text-3);margin-bottom:3px">Time Spent (Web/Android/iOS)</div>
+      <div style="font-size:12px;font-weight:600;color:var(--teal)">1.16 / 7.32 / 44.53 min</div>
+      <div style="font-size:9px;color:var(--amber);margin-top:2px">iOS leads by 38x vs Web</div>
+    </div>
+    <div class="drill-hint">🔍 Drill down</div>
+  </div>
+</div>
+
+<!-- ═══ TOP CHARTS ROW ═══════════════════════════════════════════ -->
+<div class="charts-top">
+
+  <!-- Session Trend -->
+  <div class="chart-card">
+    <div class="chart-hdr">
+      <div>
+        <div class="chart-title">Active Users Trend</div>
+        <div class="chart-sub">DAU, WAU, MAU over time — are users coming back?</div>
+      </div>
+      <select class="ctrl-sel" id="sessionSel" onchange="updateSessionChart()">
+        <option value="daily">Daily view</option>
+        <option value="weekly" selected>Weekly view</option>
+      </select>
+    </div>
+    <div class="chart-wrap" style="height:210px"><canvas id="sessionChart"></canvas></div>
+    <div class="chart-legend">
+      <div class="cl-item"><span class="cl-dot" style="background:var(--teal)"></span>DAU</div>
+      <div class="cl-item"><span class="cl-dot" style="background:var(--purple)"></span>WAU</div>
+      <div class="cl-item"><span class="cl-dot" style="background:var(--green)"></span>MAU</div>
+    </div>
+    <div class="chart-note">📌 MAU on right axis · DAU and WAU on left axis</div>
+  </div>
+
+  <!-- Session Duration by Platform -->
+  <div class="chart-card">
+    <div class="chart-hdr">
+      <div>
+        <div class="chart-title">Avg Session Duration by Platform</div>
+        <div class="chart-sub">Where are users most engaged?</div>
+      </div>
+    </div>
+    <div class="chart-wrap" style="height:210px"><canvas id="durationChart"></canvas></div>
+    <div class="chart-legend">
+      <div class="cl-item"><span class="cl-dot" style="background:var(--teal)"></span>iOS</div>
+      <div class="cl-item"><span class="cl-dot" style="background:var(--purple)"></span>Android</div>
+      <div class="cl-item"><span class="cl-dot" style="background:var(--blue)"></span>Web</div>
+    </div>
+    <div class="chart-note">📌 iOS users most engaged at 44.5 min avg session</div>
+  </div>
+</div>
+
+<!-- ═══ RETENTION COHORT TABLE ═══════════════════════════════════ -->
+<div class="cohort-card">
+  <div class="chart-hdr">
+    <div>
+      <div class="chart-title">📅 Retention Cohort Analysis</div>
+      <div class="chart-sub">What % of each month's new users are still active in subsequent weeks · darker = better retention</div>
+    </div>
+    <select class="ctrl-sel" id="cohortView" onchange="renderCohort()">
+      <option value="weekly">Weekly cohorts</option>
+      <option value="monthly" selected>Monthly cohorts</option>
+    </select>
+  </div>
+  <div class="cohort-table-wrap">
+    <table class="cohort-table" id="cohort-table"></table>
+  </div>
+  <!-- Slim annotation — injected by renderCohort() -->
+  <div id="cohort-annotation" class="cohort-annotation"></div>
+  <div class="cohort-legend">
+    <span style="font-size:10px;color:var(--text-3);margin-right:4px">Retention rate:</span>
+    <div class="cohort-leg-item"><div class="cohort-leg-dot c-100"></div><span>80–100%</span></div>
+    <div class="cohort-leg-item"><div class="cohort-leg-dot c-80"></div><span>60–80%</span></div>
+    <div class="cohort-leg-item"><div class="cohort-leg-dot c-60"></div><span>40–60%</span></div>
+    <div class="cohort-leg-item"><div class="cohort-leg-dot c-40"></div><span>25–40%</span></div>
+    <div class="cohort-leg-item"><div class="cohort-leg-dot c-25"></div><span>15–25%</span></div>
+    <div class="cohort-leg-item"><div class="cohort-leg-dot c-15"></div><span>0–15%</span></div>
+  </div>
+</div>
+
+<!-- ═══ PLATFORM BREAKDOWN ═══════════════════════════════════════ -->
+<div class="sec-lbl">
+  <div class="sec-lbl-left">
+    <div class="sec-dot" style="background:var(--teal)"></div>
+    <span class="sec-title">Platform Breakdown</span>
+    <span class="sec-sub-lbl">— Web vs iOS vs Android</span>
+  </div>
+</div>
+<div class="platform-grid">
+
+  <!-- Web -->
+  <div class="plat-card" style="--pc:var(--blue)">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--blue);border-radius:var(--r-lg) var(--r-lg) 0 0"></div>
+    <div class="plat-header">
+      <div class="plat-name-row">
+        <div class="plat-icon" style="background:rgba(61,156,245,0.12)">🌐</div>
+        <div><div class="plat-name">Web</div><div style="font-size:10px;color:var(--text-3)">Browser sessions</div></div>
+      </div>
+      <div class="plat-share-badge" style="background:rgba(61,156,245,0.12);color:var(--blue)">28% of users</div>
+    </div>
+    <div class="plat-stats">
+      <div class="plat-stat"><div class="plat-stat-lbl">DAU</div><div class="plat-stat-val" style="color:var(--blue)">91.5K</div><div class="plat-stat-sub">↑ 6.2% MoM</div></div>
+      <div class="plat-stat"><div class="plat-stat-lbl">Avg Session</div><div class="plat-stat-val">1.2 min</div><div class="plat-stat-sub">Short — browse only</div></div>
+      <div class="plat-stat"><div class="plat-stat-lbl">Bounce Rate</div><div class="plat-stat-val" style="color:var(--amber)">48%</div><div class="plat-stat-sub">⚠ Above avg</div></div>
+      <div class="plat-stat"><div class="plat-stat-lbl">Conv Rate</div><div class="plat-stat-val" style="color:var(--green)">3.5%</div><div class="plat-stat-sub">Best platform</div></div>
+    </div>
+    <div class="plat-bar-section">
+      <div class="plat-bar-label"><span>Session share of total</span><span style="color:var(--blue)">28%</span></div>
+      <div class="plat-track"><div class="plat-fill" style="width:28%;background:var(--blue)"></div></div>
+    </div>
+    <div class="plat-insight" style="background:rgba(61,156,245,0.06);border:1px solid rgba(61,156,245,0.12);color:var(--text-2)">
+      Best conversion rate at 3.5% despite shortest sessions. Web users have highest purchase intent — likely direct/branded traffic.
+    </div>
+  </div>
+
+  <!-- iOS -->
+  <div class="plat-card">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--teal);border-radius:var(--r-lg) var(--r-lg) 0 0"></div>
+    <div class="plat-header">
+      <div class="plat-name-row">
+        <div class="plat-icon" style="background:rgba(6,182,212,0.12)">🍎</div>
+        <div><div class="plat-name">iOS</div><div style="font-size:10px;color:var(--text-3)">iPhone & iPad</div></div>
+      </div>
+      <div class="plat-share-badge" style="background:rgba(6,182,212,0.12);color:var(--teal)">44% of users</div>
+    </div>
+    <div class="plat-stats">
+      <div class="plat-stat"><div class="plat-stat-lbl">DAU</div><div class="plat-stat-val" style="color:var(--teal)">143.8K</div><div class="plat-stat-sub">↑ 14.2% MoM</div></div>
+      <div class="plat-stat"><div class="plat-stat-lbl">Avg Session</div><div class="plat-stat-val" style="color:var(--teal)">44.5 min</div><div class="plat-stat-sub">Most engaged</div></div>
+      <div class="plat-stat"><div class="plat-stat-lbl">Bounce Rate</div><div class="plat-stat-val" style="color:var(--green)">22%</div><div class="plat-stat-sub">✅ Lowest</div></div>
+      <div class="plat-stat"><div class="plat-stat-lbl">Conv Rate</div><div class="plat-stat-val" style="color:var(--amber)">2.1%</div><div class="plat-stat-sub">⚠ Below web</div></div>
+    </div>
+    <div class="plat-bar-section">
+      <div class="plat-bar-label"><span>Session share of total</span><span style="color:var(--teal)">44%</span></div>
+      <div class="plat-track"><div class="plat-fill" style="width:44%;background:var(--teal)"></div></div>
+    </div>
+    <div class="plat-insight" style="background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.12);color:var(--text-2)">
+      Highest engagement at 44.5 min sessions but converting at only 2.1%. Strong product-app fit — checkout UX is the blocker. Fix iOS checkout → big revenue unlock.
+    </div>
+  </div>
+
+  <!-- Android -->
+  <div class="plat-card">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--green);border-radius:var(--r-lg) var(--r-lg) 0 0"></div>
+    <div class="plat-header">
+      <div class="plat-name-row">
+        <div class="plat-icon" style="background:rgba(0,200,150,0.12)">🤖</div>
+        <div><div class="plat-name">Android</div><div style="font-size:10px;color:var(--text-3)">Android phones & tablets</div></div>
+      </div>
+      <div class="plat-share-badge" style="background:rgba(0,200,150,0.12);color:var(--green)">28% of users</div>
+    </div>
+    <div class="plat-stats">
+      <div class="plat-stat"><div class="plat-stat-lbl">DAU</div><div class="plat-stat-val" style="color:var(--green)">91.5K</div><div class="plat-stat-sub">↑ 8.4% MoM</div></div>
+      <div class="plat-stat"><div class="plat-stat-lbl">Avg Session</div><div class="plat-stat-val">7.3 min</div><div class="plat-stat-sub">Mid-range</div></div>
+      <div class="plat-stat"><div class="plat-stat-lbl">Bounce Rate</div><div class="plat-stat-val" style="color:var(--amber)">38%</div><div class="plat-stat-sub">⚠ Watch</div></div>
+      <div class="plat-stat"><div class="plat-stat-lbl">Conv Rate</div><div class="plat-stat-val" style="color:var(--red)">1.6%</div><div class="plat-stat-sub">🔴 Lowest</div></div>
+    </div>
+    <div class="plat-bar-section">
+      <div class="plat-bar-label"><span>Session share of total</span><span style="color:var(--green)">28%</span></div>
+      <div class="plat-track"><div class="plat-fill" style="width:28%;background:var(--green)"></div></div>
+    </div>
+    <div class="plat-insight" style="background:rgba(0,200,150,0.06);border:1px solid rgba(0,200,150,0.12);color:var(--text-2)">
+      Lowest conversion at 1.6% — Android checkout experience needs attention. App performance on mid-range Android devices may be causing drop-off.
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ACTIVITY & PAGES ══════════════════════════════════════════ -->
+<div class="activity-grid">
+
+  <!-- Top Pages by Engagement -->
+  <div class="chart-card" style="padding:0;overflow:hidden">
+    <div style="padding:16px 18px;border-bottom:1px solid var(--border)">
+      <div class="chart-title">🔥 Top Pages by Engagement</div>
+      <div class="chart-sub" style="margin-top:3px">Pages where users spend the most time</div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Page</th><th>Avg Time</th><th>Sessions</th><th>Quality</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:500">/products/subscription</td><td style="font-family:'DM Mono',monospace;color:var(--teal)">8m 42s</td><td style="font-family:'DM Mono',monospace">28,400</td><td><span class="pill pill-teal">⭐ Best</span></td></tr>
+        <tr><td style="font-weight:500">/home</td><td style="font-family:'DM Mono',monospace;color:var(--green)">4m 18s</td><td style="font-family:'DM Mono',monospace">42,800</td><td><span class="pill pill-green">✅ Good</span></td></tr>
+        <tr><td style="font-weight:500">/sale</td><td style="font-family:'DM Mono',monospace;color:var(--amber)">2m 55s</td><td style="font-family:'DM Mono',monospace">19,600</td><td><span class="pill pill-amber">⚠ Watch</span></td></tr>
+        <tr><td style="font-weight:500">/blog/top-picks</td><td style="font-family:'DM Mono',monospace;color:var(--text-2)">1m 48s</td><td style="font-family:'DM Mono',monospace">12,100</td><td><span class="pill pill-amber">⚠ Watch</span></td></tr>
+        <tr><td style="font-weight:500">/checkout</td><td style="font-family:'DM Mono',monospace;color:var(--red)">0m 52s</td><td style="font-family:'DM Mono',monospace">40,020</td><td><span class="pill pill-red">🔴 Fix</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Push / Notification Engagement -->
+  <div class="chart-card" style="padding:0;overflow:hidden">
+    <div style="padding:16px 18px;border-bottom:1px solid var(--border)">
+      <div class="chart-title">🔔 User Re-engagement Channels</div>
+      <div class="chart-sub" style="margin-top:3px">How effectively we bring users back</div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Channel</th><th>Sent</th><th>Open Rate</th><th>Click Rate</th><th>Effectiveness</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:500">📧 Email</td><td style="font-family:'DM Mono',monospace">124K</td><td style="color:var(--green);font-weight:600">28.4%</td><td style="color:var(--green);font-weight:600">6.2%</td><td><span class="pill pill-green">✅ Best</span></td></tr>
+        <tr><td style="font-weight:500">🔔 Push (iOS)</td><td style="font-family:'DM Mono',monospace">98K</td><td style="color:var(--teal);font-weight:600">22.1%</td><td style="color:var(--teal);font-weight:600">8.4%</td><td><span class="pill pill-teal">⭐ High CTR</span></td></tr>
+        <tr><td style="font-weight:500">🤖 Push (Android)</td><td style="font-family:'DM Mono',monospace">76K</td><td style="color:var(--amber);font-weight:600">14.8%</td><td style="color:var(--amber);font-weight:600">4.1%</td><td><span class="pill pill-amber">⚠ Average</span></td></tr>
+        <tr><td style="font-weight:500">💬 In-app Message</td><td style="font-family:'DM Mono',monospace">52K</td><td style="color:var(--purple);font-weight:600">41.2%</td><td style="color:var(--purple);font-weight:600">12.8%</td><td><span class="pill" style="background:rgba(123,110,246,0.12);color:var(--purple)">⭐ Top CTR</span></td></tr>
+        <tr><td style="font-weight:500">📱 SMS</td><td style="font-family:'DM Mono',monospace">18K</td><td style="color:var(--red);font-weight:600">8.2%</td><td style="color:var(--red);font-weight:600">1.4%</td><td><span class="pill pill-red">🔴 Low</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ AI INSIGHT PANEL ═════════════════════════════════════════ -->
+<div class="insight-panel">
+  <div class="insight-hdr">
+    <div class="insight-badge">🧠 Engagement Intelligence</div>
+    <div class="insight-ts">Auto-generated · <span id="insight-period">Last 30 Days</span></div>
+  </div>
+  <div class="insight-grid">
+    <div class="insight-item">
+      <div class="itag itag-win">✅ Win</div>
+      <div class="itext"><strong>iOS users are your most engaged segment</strong> — 44.5 min avg session, only 22% bounce. WAU:MAU ratio of 38.4% is healthy. In-app messages have 41.2% open rate and 12.8% CTR — best re-engagement channel.</div>
+    </div>
+    <div class="insight-item">
+      <div class="itag itag-risk">⚠ Risk</div>
+      <div class="itext"><strong>DAU:MAU ratio at 6.2% is critically low</strong> — industry benchmark is 15–25%. This means most users only open the app once a month. You have high acquisition but low daily habit formation. Retention is the core problem.</div>
+    </div>
+    <div class="insight-item">
+      <div class="itag itag-action">💡 Action</div>
+      <div class="itext"><strong>Build a daily engagement loop.</strong> In-app messages have 12.8% CTR — use them for daily content nudges. <strong>Moving DAU:MAU from 6.2% to 12% would nearly double daily active users</strong> from 326K to 630K without new acquisition.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════ -->
+<div class="dash-footer">
+  <div class="df-item">Tab: <span>Traffic & Acquisition</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Period: <span id="footer-period">Last 30 Days</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">MAU: <span>1.067M</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">DAU: <span>326.8K</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">DAU:MAU: <span style="color:var(--amber)">6.2% ⚠</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Top Platform: <span style="color:var(--teal)">iOS 44.5 min session</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Best Re-engage: <span style="color:var(--purple)">In-app 12.8% CTR</span></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   SHARED
+══════════════════════════════════════════════════ */
+const gc='rgba(255,255,255,0.04)',tc='#8B87A8';
+const tip={backgroundColor:'#1A1730',titleColor:'#F0EEF8',bodyColor:'#8B87A8',borderColor:'rgba(6,182,212,0.25)',borderWidth:1,padding:10,cornerRadius:8};
+
+/* ══════════════════════════════════════════════════
+   DAU / WAU / MAU TOGGLE
+══════════════════════════════════════════════════ */
+const AUG_DATA={
+  '30d':{
+    dau:{value:'326.8K',delta:'↑ +7.2%',vs:'vs yesterday'},
+    wau:{value:'409.1K',delta:'↑ +9.4%',vs:'vs last week'},
+    mau:{value:'1.067M',delta:'↑ +12.4%',vs:'vs last month'},
+  },
+  today:{
+    dau:{value:'326.8K',delta:'↑ +7.2%',vs:'vs yesterday'},
+    wau:{value:'409.1K',delta:'↑ +5.8%',vs:'vs last week'},
+    mau:{value:'1.067M',delta:'↑ +12.4%',vs:'rolling 30d'},
+  },
+  '7d':{
+    dau:{value:'298.4K',delta:'↑ +9.1%',vs:'avg daily this week'},
+    wau:{value:'409.1K',delta:'↑ +8.2%',vs:'vs prev week'},
+    mau:{value:'1.067M',delta:'↑ +12.4%',vs:'rolling 30d'},
+  },
+  mtd:{
+    dau:{value:'318.2K',delta:'↑ +6.8%',vs:'avg daily MTD'},
+    wau:{value:'398.4K',delta:'↑ +8.1%',vs:'vs last MTD'},
+    mau:{value:'1.042M',delta:'↑ +11.2%',vs:'vs last MTD'},
+  },
+  ytd:{
+    dau:{value:'280.4K',delta:'↑ +18.2%',vs:'avg daily YTD'},
+    wau:{value:'364.8K',delta:'↑ +21.4%',vs:'vs last YTD'},
+    mau:{value:'920K',delta:'↑ +24.1%',vs:'vs last YTD'},
+  }
+};
+let currentAUG='dau';
+function switchAUG(type){
+  currentAUG=type;
+  document.querySelectorAll('.aug-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('aug-'+type).classList.add('active');
+  const d=AUG_DATA[currentPeriod]?.[type]||AUG_DATA['30d'][type];
+  document.getElementById('aug-value').textContent=d.value;
+  document.getElementById('aug-delta').textContent='↑ '+d.delta.replace('↑ ','');
+  document.getElementById('aug-vs').textContent=d.vs;
+}
+function updateAUGCard(){
+  switchAUG(currentAUG);
+}
+const PERIODS={
+  today:{label:'Today',cards:{
+    'dau':{value:'326.8K',delta:'↑ +7.2%',dir:'up',vs:'vs yesterday'},
+    'wau':{value:'409.1K',delta:'↑ +5.8%',dir:'up',vs:'vs last week'},
+    'mau':{value:'1.067M',delta:'↑ +12.4%',dir:'up',vs:'vs last month'},
+    'session':{value:'18.4 min',delta:'↑ +1.2 min',dir:'up',vs:'vs yesterday'},
+    'bounce':{value:'32%',delta:'↓ −2%',dir:'up',vs:'vs yesterday'},
+    'dau-mau':{value:'6.2%',delta:'⚠ low',dir:'warn',vs:'benchmark 15–25%'},
+  }},
+  '7d':{label:'Last 7 Days',cards:{
+    'dau':{value:'298.4K',delta:'↑ +9.1%',dir:'up',vs:'vs prev 7 days'},
+    'wau':{value:'409.1K',delta:'↑ +8.2%',dir:'up',vs:'vs prev 7 days'},
+    'mau':{value:'1.067M',delta:'↑ +12.4%',dir:'up',vs:'rolling 30 days'},
+    'session':{value:'16.8 min',delta:'↑ +2.1 min',dir:'up',vs:'vs prev week'},
+    'bounce':{value:'33%',delta:'↓ −1%',dir:'up',vs:'vs prev week'},
+    'dau-mau':{value:'6.2%',delta:'⚠ low',dir:'warn',vs:'benchmark 15–25%'},
+  }},
+  '30d':{label:'Last 30 Days',cards:{
+    'dau':{value:'326.8K',delta:'↑ +7.2%',dir:'up',vs:'vs last month'},
+    'wau':{value:'409.1K',delta:'↑ +9.4%',dir:'up',vs:'vs last month'},
+    'mau':{value:'1.067M',delta:'↑ +12.4%',dir:'up',vs:'vs last month'},
+    'session':{value:'18.4 min',delta:'↑ +3.2 min',dir:'up',vs:'vs last month'},
+    'bounce':{value:'32%',delta:'↓ −2%',dir:'up',vs:'improving'},
+    'dau-mau':{value:'6.2%',delta:'⚠ below 15%',dir:'warn',vs:'benchmark 15–25%'},
+  }},
+  mtd:{label:'Month-to-Date',cards:{
+    'dau':{value:'318.2K',delta:'↑ +6.8%',dir:'up',vs:'vs last MTD'},
+    'wau':{value:'398.4K',delta:'↑ +8.1%',dir:'up',vs:'vs last MTD'},
+    'mau':{value:'1.042M',delta:'↑ +11.2%',dir:'up',vs:'vs last MTD'},
+    'session':{value:'17.8 min',delta:'↑ +2.8 min',dir:'up',vs:'vs last MTD'},
+    'bounce':{value:'33%',delta:'↓ −1.5%',dir:'up',vs:'vs last MTD'},
+    'dau-mau':{value:'6.1%',delta:'⚠ low',dir:'warn',vs:'benchmark 15–25%'},
+  }},
+  ytd:{label:'Year-to-Date',cards:{
+    'dau':{value:'280.4K',delta:'↑ +18.2%',dir:'up',vs:'vs last YTD'},
+    'wau':{value:'364.8K',delta:'↑ +21.4%',dir:'up',vs:'vs last YTD'},
+    'mau':{value:'920K',delta:'↑ +24.1%',dir:'up',vs:'vs last YTD'},
+    'session':{value:'15.2 min',delta:'↑ +5.4 min',dir:'up',vs:'vs last YTD'},
+    'bounce':{value:'36%',delta:'↓ −4%',dir:'up',vs:'improving'},
+    'dau-mau':{value:'5.8%',delta:'⚠ low',dir:'warn',vs:'benchmark 15–25%'},
+  }}
+};
+const KPI_META=[
+  {id:'dau',     label:'DAU',                  icon:'📅',iconBg:'rgba(6,182,212,0.12)'},
+  {id:'wau',     label:'WAU',                  icon:'📆',iconBg:'rgba(123,110,246,0.12)'},
+  {id:'mau',     label:'MAU',                  icon:'🗓️',iconBg:'rgba(0,200,150,0.12)'},
+  {id:'session', label:'Avg Session Duration', icon:'⏱️',iconBg:'rgba(245,166,35,0.12)'},
+  {id:'bounce',  label:'Bounce Rate',          icon:'↩️',iconBg:'rgba(61,156,245,0.12)'},
+  {id:'dau-mau', label:'DAU : MAU Ratio',      icon:'📊',iconBg:'rgba(245,166,35,0.12)'},
+];
+let currentPeriod='30d';
+function renderCards(){
+  const data=PERIODS[currentPeriod].cards;
+  document.getElementById('kpi-grid').innerHTML=KPI_META.map(m=>{
+    const d=data[m.id];
+    const dc=d.dir==='up'?'up':d.dir==='down'?'down':'warn';
+    const dClass=`delta-${d.dir==='up'?'up':d.dir==='down'?'down':'warn'}`;
+    return `<div class="kpi-card ${dc}">
+      <div class="kpi-top"><div class="kpi-label">${m.label}</div><div class="kpi-icon" style="background:${m.iconBg}">${m.icon}</div></div>
+      <div class="kpi-value">${d.value}</div>
+      <div class="kpi-delta ${dClass}">${d.delta}</div>
+      <div class="kpi-vs">${d.vs}</div>
+      <div class="drill-hint">🔍 Drill down</div>
+    </div>`;
+  }).join('');
+}
+function setPeriod(p,btn){
+  currentPeriod=p;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const label=PERIODS[p].label;
+  document.getElementById('period-label').textContent=label;
+  document.getElementById('footer-period').textContent=label;
+  document.getElementById('insight-period').textContent=label;
+  updateAUGCard();
+}
+
+/* ══════════════════════════════════════════════════
+   SESSION TREND CHART
+══════════════════════════════════════════════════ */
+const SESSION_DATA={
+  weekly:{
+    labels:['Wk 1','Wk 2','Wk 3','Wk 4'],
+    dau:[298000,308000,318000,326800],
+    wau:[372000,386000,398000,409100],
+    mau:[940000,980000,1020000,1067000]
+  },
+  daily:{
+    labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    dau:[286000,298000,292000,318000,308000,342000,326800],
+    wau:[380000,385000,390000,398000,402000,410000,409100],
+    mau:[1040000,1045000,1050000,1055000,1060000,1064000,1067000]
+  }
+};
+let sessionChartInst=null;
+function updateSessionChart(){
+  const sel=document.getElementById('sessionSel').value;
+  const d=SESSION_DATA[sel];
+  if(sessionChartInst)sessionChartInst.destroy();
+  sessionChartInst=new Chart(document.getElementById('sessionChart'),{
+    type:'line',
+    data:{labels:d.labels,datasets:[
+      {label:'DAU',data:d.dau,borderColor:'#06B6D4',backgroundColor:'rgba(6,182,212,0.06)',tension:0.4,pointRadius:4,pointBackgroundColor:'#06B6D4',fill:true,yAxisID:'yLeft'},
+      {label:'WAU',data:d.wau,borderColor:'#7B6EF6',backgroundColor:'transparent',tension:0.4,pointRadius:4,pointBackgroundColor:'#7B6EF6',yAxisID:'yLeft'},
+      {label:'MAU',data:d.mau,borderColor:'#00C896',backgroundColor:'transparent',tension:0.4,pointRadius:4,pointBackgroundColor:'#00C896',borderDash:[4,3],yAxisID:'yRight'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>{const v=c.parsed.y;return `${c.dataset.label}: ${v>=1000000?(v/1e6).toFixed(3)+'M':v>=1000?(v/1000).toFixed(1)+'K':v}`;} }}},
+      scales:{
+        yLeft:{position:'left',grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},border:{display:false}},
+        yRight:{position:'right',grid:{display:false},ticks:{color:'#00C896',font:{size:10},callback:v=>(v/1e6).toFixed(2)+'M'},border:{display:false}},
+        x:{grid:{color:gc},ticks:{color:tc,font:{size:10}},border:{display:false}}
+      }
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   SESSION DURATION CHART
+══════════════════════════════════════════════════ */
+new Chart(document.getElementById('durationChart'),{
+  type:'bar',
+  data:{
+    labels:['Jan','Feb','Mar','Apr'],
+    datasets:[
+      {label:'iOS',data:[38.2,40.1,42.8,44.5],backgroundColor:'rgba(6,182,212,0.75)',borderRadius:5,borderSkipped:false},
+      {label:'Android',data:[5.8,6.2,6.9,7.3],backgroundColor:'rgba(123,110,246,0.7)',borderRadius:5,borderSkipped:false},
+      {label:'Web',data:[0.9,1.0,1.1,1.2],backgroundColor:'rgba(61,156,245,0.65)',borderRadius:5,borderSkipped:false},
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y} min`}}},
+    scales:{y:{grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>v+' min'},border:{display:false}},x:{grid:{display:false},ticks:{color:tc,font:{size:10}},border:{display:false}}}
+  }
+});
+
+/* ══════════════════════════════════════════════════
+   RETENTION COHORT
+══════════════════════════════════════════════════ */
+const COHORT_DATA={
+  monthly:{
+    cohorts:[
+      {label:'Nov 2024',size:'8.2K', data:[100,62,48,38,32,28,24]},
+      {label:'Dec 2024',size:'9.4K', data:[100,65,51,41,35,30,null]},
+      {label:'Jan 2025',size:'10.8K',data:[100,68,54,43,38,null,null]},
+      {label:'Feb 2025',size:'11.2K',data:[100,66,52,44,null,null,null]},
+      {label:'Mar 2025',size:'13.1K',data:[100,70,55,null,null,null,null]},
+      {label:'Apr 2025',size:'15.2K',data:[100,72,null,null,null,null,null]},
+    ],
+    weeks:['Month 0','Month 1','Month 2','Month 3','Month 4','Month 5','Month 6']
+  },
+  weekly:{
+    cohorts:[
+      {label:'Wk 1 Apr',size:'3.8K',data:[100,58,42,32,null,null]},
+      {label:'Wk 2 Apr',size:'4.1K',data:[100,61,45,null,null,null]},
+      {label:'Wk 3 Apr',size:'3.9K',data:[100,63,null,null,null,null]},
+      {label:'Wk 4 Apr',size:'3.4K',data:[100,null,null,null,null,null]},
+    ],
+    weeks:['Week 0','Week 1','Week 2','Week 3','Week 4','Week 5']
+  }
+};
+function getCohortClass(v){
+  if(v===null)return 'c-na';
+  if(v>=80)return 'c-100';
+  if(v>=60)return 'c-80';
+  if(v>=40)return 'c-60';
+  if(v>=25)return 'c-40';
+  if(v>=15)return 'c-25';
+  return 'c-15';
+}
+let caDetailOpen=false;
+function toggleCaDetail(){
+  caDetailOpen=!caDetailOpen;
+  const det=document.getElementById('ca-detail');
+  const arr=document.querySelector('.ca-chip-arrow');
+  if(det){ det.classList.toggle('visible',caDetailOpen); }
+  if(arr){ arr.classList.toggle('open',caDetailOpen); }
+}
+
+function renderCohort(){
+  const view=document.getElementById('cohortView').value;
+  const d=COHORT_DATA[view];
+  const w1i=1, w2i=2;
+
+  /* Compute Week 1→Week 2 drops */
+  const drops=d.cohorts.map(c=>{
+    const w1=c.data[w1i], w2=c.data[w2i];
+    return (w1!==null&&w2!==null) ? parseFloat((w1-w2).toFixed(1)) : null;
+  }).filter(v=>v!==null);
+
+  const avgDrop=drops.length ? (drops.reduce((a,b)=>a+b,0)/drops.length).toFixed(1) : null;
+  const periodLabel=view==='monthly'?'Month 2':'Week 2';
+  const flagPattern=drops.length>=3 && drops.every(d=>d>=10);
+
+  const thead=`<thead><tr>
+    <th>Cohort</th><th>Size</th>
+    ${d.weeks.map((w,i)=>i===w2i && flagPattern
+      ? `<th class="week2-col">${w} ⚠</th>`
+      : `<th>${w}</th>`
+    ).join('')}
+  </tr></thead>`;
+
+  const tbody=`<tbody>${d.cohorts.map(c=>`
+    <tr>
+      <td>${c.label}</td>
+      <td style="color:var(--text-2);font-family:'DM Mono',monospace">${c.size}</td>
+      ${c.data.map((v,i)=>{
+        const base=`class="${getCohortClass(v)}${i===w2i&&flagPattern?' week2-cell':''}" style="padding:8px 10px"`;
+        return `<td ${base}>${v===null?'—':v+'%'}</td>`;
+      }).join('')}
+    </tr>`).join('')}</tbody>`;
+
+  document.getElementById('cohort-table').innerHTML=thead+tbody;
+
+  /* Slim annotation chip */
+  caDetailOpen=false;
+  const ann=document.getElementById('cohort-annotation');
+  if(flagPattern && avgDrop){
+    const retainedCohorts=d.cohorts.filter(c=>c.data[w2i]!==null);
+    const avgWk2=Math.round(retainedCohorts.reduce((s,c)=>s+c.data[w2i],0)/retainedCohorts.length);
+    ann.classList.add('visible');
+    ann.innerHTML=`
+      <div class="ca-chip" onclick="toggleCaDetail()">
+        <span>⚠</span>
+        <span>${periodLabel} drops avg <strong>−${avgDrop}pp</strong> across ${drops.length} cohorts</span>
+        <span class="ca-chip-arrow">▾</span>
+      </div>
+      <div id="ca-detail" class="ca-detail">
+        <strong>Pattern:</strong> Every cohort loses ~${avgDrop}pp of users between ${d.weeks[w1i]} and ${d.weeks[w2i]}, leaving ${avgWk2}% average retention. This is a structural onboarding gap — users who signed up aren't forming a return habit in their first ${view==='monthly'?'2 months':'14 days'}.
+        <br><br>
+        <strong>Most likely cause:</strong> No re-engagement trigger ${view==='monthly'?'around Week 6–8 of the user lifecycle':'at Day 6–8'}. If users haven't received a push or email nudge before ${periodLabel}, they simply don't return.
+        A targeted nudge at this point typically lifts ${periodLabel} retention by <strong style="color:var(--green)">8–12pp</strong> based on industry benchmarks.
+      </div>`;
+  } else {
+    ann.classList.remove('visible');
+    ann.innerHTML='';
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   DRILL-DOWN ENGINE
+══════════════════════════════════════════════════ */
+const gc2='rgba(255,255,255,0.04)', tc2='#8B87A8';
+const tip2={backgroundColor:'#1A1730',titleColor:'#F0EEF8',bodyColor:'#8B87A8',borderColor:'rgba(6,182,212,0.25)',borderWidth:1,padding:10,cornerRadius:8};
+let activeDrillChart=null;
+
+const DRILL={
+  'active-users':{
+    title:'Active Users — DAU / WAU / MAU',icon:'👥',iconBg:'rgba(6,182,212,0.15)',
+    stats:[
+      {lbl:'DAU Today',val:'326.8K',sub:'↑ +7.2% vs yesterday',col:'#06B6D4'},
+      {lbl:'DAU:MAU Ratio',val:'6.2%',sub:'⚠ Benchmark is 15–25%',col:'#F5A623'},
+      {lbl:'WAU:MAU Ratio',val:'38.4%',sub:'✅ Healthy range',col:'#00C896'}
+    ],
+    chartTitle:'DAU / WAU / MAU — 4-Week Trend',chartSub:'Are users forming a daily habit or just monthly check-ins?',
+    chartType:'line',
+    chartData:{
+      labels:['Wk 1','Wk 2','Wk 3','Wk 4'],
+      datasets:[
+        {label:'DAU',data:[298000,308000,318000,326800],borderColor:'#06B6D4',backgroundColor:'rgba(6,182,212,0.06)',tension:0.4,pointRadius:4,fill:true,yAxisID:'yL'},
+        {label:'WAU',data:[372000,386000,398000,409100],borderColor:'#7B6EF6',backgroundColor:'transparent',tension:0.4,pointRadius:4,yAxisID:'yL'},
+        {label:'MAU',data:[940000,980000,1020000,1067000],borderColor:'#00C896',borderDash:[4,3],backgroundColor:'transparent',tension:0.4,pointRadius:4,yAxisID:'yR'},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v>=1000?(v/1000).toFixed(0)+'K':v},yR:{cb:v=>(v/1e6).toFixed(2)+'M'}},
+    bkTitle:'Active Users by Platform',
+    bkCols:['Platform','DAU','WAU','MAU','DAU:MAU'],
+    bkRows:[
+      ['🍎 iOS','143.8K','188.4K','469K',{txt:'30.6%',cls:'mbadge-teal'}],
+      ['🤖 Android','91.5K','124.2K','324K',{txt:'28.2%',cls:'mbadge-green'}],
+      ['🌐 Web','91.5K','96.5K','274K',{txt:'33.4%',cls:'mbadge-amber'}],
+    ],
+    vizTitle:'DAU:MAU Progress vs Benchmark',
+    vizBars:[
+      {name:'Current DAU:MAU',val:'6.2%',pct:25,col:'#F5A623'},
+      {name:'Minimum Healthy (15%)',val:'15%',pct:60,col:'rgba(255,255,255,0.2)'},
+      {name:'Good Benchmark (25%)',val:'25%',pct:100,col:'rgba(0,200,150,0.3)'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>MAU growing 12.4% MoM to 1.067M</strong> — strong top-of-funnel acquisition. WAU:MAU at 38.4% shows weekly habit is forming. iOS users are most active with highest DAU:MAU ratio of 30.6%.'},
+      {tag:'🔴 Risk',type:'risk',txt:'<strong>DAU:MAU at 6.2% is critically low</strong> — benchmark is 15–25%. Only 1 in 16 monthly users opens the app daily. High acquisition is masking a severe daily engagement problem.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Launch a daily habit loop.</strong> In-app messages have 12.8% CTR. Push daily content nudges to Web users (largest segment). Moving DAU:MAU from 6.2% → 12% doubles daily actives from 326K → 630K without new acquisition cost.'},
+    ]
+  },
+  'sessions':{
+    title:'Daily Sessions',icon:'📱',iconBg:'rgba(123,110,246,0.15)',
+    stats:[
+      {lbl:'Total Sessions Today',val:'408.5K',sub:'↑ +6.8% vs yesterday',col:'#7B6EF6'},
+      {lbl:'Sessions per DAU',val:'1.25',sub:'1.25 sessions per active user',col:'#06B6D4'},
+      {lbl:'Peak Day',val:'Saturday',sub:'Avg 1.8x weekday volume',col:'#00C896'}
+    ],
+    chartTitle:'Sessions by Day of Week',chartSub:'When are users most active? Plan campaigns around these peaks.',
+    chartType:'bar',
+    chartData:{
+      labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets:[{label:'Sessions',data:[328000,342000,335000,368000,355000,490000,412000],backgroundColor:['rgba(123,110,246,0.6)','rgba(123,110,246,0.6)','rgba(123,110,246,0.6)','rgba(123,110,246,0.6)','rgba(123,110,246,0.6)','rgba(0,200,150,0.8)','rgba(123,110,246,0.7)'],borderRadius:6,borderSkipped:false}]
+    },
+    chartOpts:{yL:{cb:v=>v>=1000?(v/1000).toFixed(0)+'K':v}},
+    bkTitle:'Sessions by Platform',
+    bkCols:['Platform','Sessions','Avg Duration','Sessions/User','Trend'],
+    bkRows:[
+      ['🌐 Web','282K',{txt:'1.2 min',cls:'mbadge-amber'},'1.8',{txt:'↑ +8.2%',cls:'mbadge-green'}],
+      ['🤖 Android','99K',{txt:'7.3 min',cls:'mbadge-teal'},'1.1',{txt:'↑ +5.1%',cls:'mbadge-green'}],
+      ['🍎 iOS','27.5K',{txt:'44.5 min',cls:'mbadge-teal'},'0.19',{txt:'↑ +14.2%',cls:'mbadge-green'}],
+    ],
+    vizTitle:'Session Volume Distribution',
+    vizBars:[
+      {name:'Web Sessions',val:'282K (69%)',pct:100,col:'#3D9CF5'},
+      {name:'Android Sessions',val:'99K (24.2%)',pct:35,col:'#00C896'},
+      {name:'iOS Sessions',val:'27.5K (6.7%)',pct:10,col:'#06B6D4'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>Saturday drives 490K sessions — 49% above weekday average.</strong> Weekend users are highly engaged. Plan campaign pushes for Friday evening to capture Saturday traffic surge.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>Web dominates sessions (69%) but has the shortest duration (1.2 min).</strong> High session count but low depth = users not finding value. Homepage bounce rate needs attention.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Schedule push notifications Thursday 7–9pm</strong> to drive Friday/weekend sessions. Historical data shows +23% session lift when push is sent 18 hours before weekend peak.'},
+    ]
+  },
+  'installs':{
+    title:'Daily Installs',icon:'📲',iconBg:'rgba(0,200,150,0.15)',
+    stats:[
+      {lbl:'Total Installs Today',val:'70.3K',sub:'↑ +5.4% vs yesterday',col:'#00C896'},
+      {lbl:'Install-to-DAU Conv',val:'21.5%',sub:'⚠ 1 in 5 installs become daily active',col:'#F5A623'},
+      {lbl:'Organic Install Share',val:'58%',sub:'↑ growing — good sign',col:'#06B6D4'}
+    ],
+    chartTitle:'7-Day Install Trend',chartSub:'Daily install volume — spikes indicate campaign impact',
+    chartType:'bar',
+    chartData:{
+      labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets:[
+        {label:'Organic',data:[22000,23400,21800,25600,24200,32000,28400],backgroundColor:'rgba(0,200,150,0.75)',borderRadius:5,borderSkipped:false,stack:'a'},
+        {label:'Paid',data:[14000,15200,13900,16800,15600,20000,17800],backgroundColor:'rgba(123,110,246,0.7)',borderRadius:5,borderSkipped:false,stack:'a'},
+        {label:'Referral',data:[4200,4600,4100,5200,4800,6400,5600],backgroundColor:'rgba(6,182,212,0.65)',borderRadius:5,borderSkipped:false,stack:'a'},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v>=1000?(v/1000).toFixed(0)+'K':v},stacked:true},
+    bkTitle:'Installs by Acquisition Channel (via Branch)',
+    bkCols:['Channel','Installs','Share','Conv to DAU','Cost per Install'],
+    bkRows:[
+      ['🌿 Organic','40.8K','58%',{txt:'28.4%',cls:'mbadge-green'},'₹0'],
+      ['💰 Paid','22.1K','31.5%',{txt:'14.2%',cls:'mbadge-amber'},'₹42'],
+      ['🤝 Referral','7.4K','10.5%',{txt:'38.6%',cls:'mbadge-teal'},'₹12'],
+    ],
+    vizTitle:'Channel Quality (Install → DAU Conversion)',
+    vizBars:[
+      {name:'Referral (38.6% → DAU)',val:'38.6%',pct:100,col:'#06B6D4'},
+      {name:'Organic (28.4% → DAU)',val:'28.4%',pct:74,col:'#00C896'},
+      {name:'Paid (14.2% → DAU)',val:'14.2%',pct:37,col:'#F5A623'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>Referral installs convert to DAU at 38.6%</strong> — 2.7x better than paid. Referred users have higher intent and lower churn. Referral program at ₹12 CPI is the best channel by ROI.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>Paid installs convert to DAU at only 14.2%</strong> — 6 out of 7 paid installs never become daily users. ₹42 CPI × low activation = high effective CAC. Review paid creative and onboarding for paid cohort.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Scale referral program aggressively.</strong> Shift 20% of paid budget to referral incentives. Estimated +3,200 high-quality daily installs/month. Also build a paid-user-specific onboarding flow to improve the 14.2% activation rate.'},
+    ]
+  },
+  'bounce':{
+    title:'Bounce Rate',icon:'↩️',iconBg:'rgba(61,156,245,0.15)',
+    stats:[
+      {lbl:'Overall Bounce Rate',val:'32%',sub:'↓ −2% vs last period — improving',col:'#00C896'},
+      {lbl:'Paid Traffic Bounce',val:'52%',sub:'⚠ High — landing page mismatch',col:'#F5A623'},
+      {lbl:'Organic Traffic Bounce',val:'22%',sub:'✅ Excellent — strong intent',col:'#00C896'}
+    ],
+    chartTitle:'Bounce Rate Trend — 4 Weeks',chartSub:'Lower is better · track if changes are improving engagement',
+    chartType:'line',
+    chartData:{
+      labels:['Wk 1','Wk 2','Wk 3','Wk 4'],
+      datasets:[
+        {label:'Overall',data:[36,34,33,32],borderColor:'#3D9CF5',backgroundColor:'rgba(61,156,245,0.07)',tension:0.4,pointRadius:5,fill:true,yAxisID:'yL'},
+        {label:'Paid',data:[58,56,54,52],borderColor:'#F5A623',backgroundColor:'transparent',tension:0.4,pointRadius:5,borderDash:[4,3],yAxisID:'yL'},
+        {label:'Organic',data:[24,23,22,22],borderColor:'#00C896',backgroundColor:'transparent',tension:0.4,pointRadius:5,yAxisID:'yL'},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v+'%',min:0,max:70}},
+    bkTitle:'Bounce Rate by Traffic Source',
+    bkCols:['Traffic Source','Sessions','Bounce Rate','Trend','Action'],
+    bkRows:[
+      ['Organic Search','124K',{txt:'22%',cls:'mbadge-green'},'→ stable',{txt:'✅ Good',cls:'mbadge-green'}],
+      ['Direct','89K',{txt:'28%',cls:'mbadge-green'},'↓ improving',{txt:'✅ Good',cls:'mbadge-green'}],
+      ['Social','48K',{txt:'44%',cls:'mbadge-amber'},'→ flat',{txt:'⚠ Watch',cls:'mbadge-amber'}],
+      ['Paid Search','72K',{txt:'52%',cls:'mbadge-amber'},'↓ slowly improving',{txt:'⚠ Fix landing pages',cls:'mbadge-amber'}],
+      ['/checkout page','40K',{txt:'61%',cls:'mbadge-red'},'↑ worsening',{txt:'🔴 Critical fix',cls:'mbadge-red'}],
+    ],
+    vizTitle:'Bounce by Source — Impact Size',
+    vizBars:[
+      {name:'Organic — 22% bounce',val:'22%',pct:22,col:'#00C896'},
+      {name:'Direct — 28% bounce',val:'28%',pct:28,col:'#3D9CF5'},
+      {name:'Social — 44% bounce',val:'44%',pct:44,col:'#F5A623'},
+      {name:'Paid — 52% bounce',val:'52%',pct:52,col:'#FF4D6A'},
+      {name:'/checkout — 61% bounce',val:'61%',pct:61,col:'#FF4D6A'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>Overall bounce improving 4pp over 4 weeks</strong> from 36% → 32%. Organic bounce at 22% shows strong content-search alignment. Direct traffic intent is high — these users know what they want.'},
+      {tag:'🔴 Risk',type:'risk',txt:'<strong>/checkout page bounce at 61% is critical.</strong> 40K sessions monthly hitting checkout and leaving immediately. At current AOV of ₹346 this represents ₹8.5L/month in abandoned revenue.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Fix paid landing pages first</strong> — 52% bounce with 72K sessions = biggest volume impact. Match ad copy to landing page headline exactly. Then fix /checkout mobile experience. These two fixes could reduce overall bounce to below 25%.'},
+    ]
+  },
+  'time-on-site':{
+    title:'Time on Site (Web)',icon:'⏱️',iconBg:'rgba(6,182,212,0.15)',
+    stats:[
+      {lbl:'Overall Avg (Web)',val:'4.53 min',sub:'272 seconds — above industry avg',col:'#06B6D4'},
+      {lbl:'Desktop Avg',val:'6.8 min',sub:'↑ 2x more engaged than mobile',col:'#00C896'},
+      {lbl:'Mobile Avg',val:'2.9 min',sub:'⚠ Low — mobile UX gap',col:'#F5A623'}
+    ],
+    chartTitle:'Avg Time on Site by Page Category',chartSub:'Where are users spending their time? Which pages hold attention?',
+    chartType:'bar',
+    chartData:{
+      labels:['Subscription','Home','Blog','Sale','Checkout'],
+      datasets:[{label:'Avg Time (min)',data:[8.7,4.3,3.2,2.9,0.87],backgroundColor:['rgba(6,182,212,0.8)','rgba(0,200,150,0.75)','rgba(123,110,246,0.7)','rgba(245,166,35,0.7)','rgba(255,77,106,0.75)'],borderRadius:6,borderSkipped:false}]
+    },
+    chartOpts:{yL:{cb:v=>v+' min'}},
+    bkTitle:'Time on Site by Device & Source',
+    bkCols:['Segment','Avg Time','Sessions','Scroll Depth','Quality'],
+    bkRows:[
+      ['Desktop — Organic','8.2 min','68K','82%',{txt:'⭐ Best',cls:'mbadge-teal'}],
+      ['Desktop — Direct','6.4 min','42K','74%',{txt:'✅ Good',cls:'mbadge-green'}],
+      ['Mobile — Organic','3.1 min','56K','48%',{txt:'⚠ Watch',cls:'mbadge-amber'}],
+      ['Mobile — Paid','2.2 min','38K','31%',{txt:'⚠ Watch',cls:'mbadge-amber'}],
+      ['/checkout (any)','0.87 min','40K','18%',{txt:'🔴 Fix',cls:'mbadge-red'}],
+    ],
+    vizTitle:'Time Distribution by Device',
+    vizBars:[
+      {name:'Desktop (avg 6.8 min)',val:'6.8 min',pct:100,col:'#06B6D4'},
+      {name:'Tablet (avg 4.1 min)',val:'4.1 min',pct:60,col:'#7B6EF6'},
+      {name:'Mobile (avg 2.9 min)',val:'2.9 min',pct:43,col:'#F5A623'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>/products/subscription holds users for 8.7 min avg</strong> — highest on site. Users who reach this page are highly engaged. Desktop organic users read deepest (82% scroll depth). These are your highest-intent users.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>Mobile time on site at 2.9 min is 2.3x lower than desktop.</strong> 58% of all sessions are mobile. Short mobile sessions + high bounce = poor mobile experience is the single biggest drag on engagement metrics.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Redesign /checkout for mobile-first.</strong> 0.87 min at checkout + 61% bounce = UX friction. Also add in-page CTAs on /blog pages to extend session depth. Estimated +1.4 min avg session time if mobile checkout improves to desktop parity.'},
+    ]
+  },
+  'pages-session':{
+    title:'Pages per Session',icon:'📄',iconBg:'rgba(245,166,35,0.15)',
+    stats:[
+      {lbl:'Overall Pages/Session',val:'3.20',sub:'Within industry avg of 3–5',col:'#F5A623'},
+      {lbl:'Purchase Path Depth',val:'4.8 pages',sub:'✅ Users who buy browse more',col:'#00C896'},
+      {lbl:'Bounce Path Depth',val:'1.0 pages',sub:'32% of sessions = 1 page only',col:'#FF4D6A'}
+    ],
+    chartTitle:'Pages per Session — Day of Week Pattern',chartSub:'Do weekend users browse more? Informs campaign scheduling.',
+    chartType:'bar',
+    chartData:{
+      labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+      datasets:[{label:'Pages/Session',data:[2.8,2.9,2.9,3.1,3.2,4.1,3.8],backgroundColor:['rgba(245,166,35,0.6)','rgba(245,166,35,0.6)','rgba(245,166,35,0.6)','rgba(245,166,35,0.6)','rgba(245,166,35,0.7)','rgba(0,200,150,0.8)','rgba(0,200,150,0.75)'],borderRadius:6,borderSkipped:false}]
+    },
+    chartOpts:{yL:{cb:v=>v+' pg',min:0,max:5}},
+    bkTitle:'Top User Paths (Most Common Page Sequences)',
+    bkCols:['Path','Sessions','Conv Rate','Avg Pages','Outcome'],
+    bkRows:[
+      ['Home → Subscription → Checkout','18,400','8.4%','4.2',{txt:'💰 Best conv',cls:'mbadge-green'}],
+      ['Home → Sale → Checkout','12,100','5.2%','3.8',{txt:'✅ Good',cls:'mbadge-green'}],
+      ['Blog → Home → Browse (exit)','24,800','0.8%','3.1',{txt:'⚠ No conv',cls:'mbadge-amber'}],
+      ['Paid Ad → Home → Exit','22,600','1.2%','1.4',{txt:'🔴 Wasted spend',cls:'mbadge-red'}],
+    ],
+    vizTitle:'Path Depth vs Conversion Rate',
+    vizBars:[
+      {name:'Purchase path (4.8 pages) → 8.4% conv',val:'8.4% conv',pct:100,col:'#00C896'},
+      {name:'Sale path (3.8 pages) → 5.2% conv',val:'5.2% conv',pct:62,col:'#06B6D4'},
+      {name:'Blog path (3.1 pages) → 0.8% conv',val:'0.8% conv',pct:10,col:'#F5A623'},
+      {name:'Paid ad path (1.4 pages) → 1.2% conv',val:'1.2% conv',pct:14,col:'#FF4D6A'},
+    ],
+    insights:[
+      {tag:'✅ Win',type:'win',txt:'<strong>Saturday sessions average 4.1 pages</strong> — 47% above Monday. Weekend users are in discovery mode, not intent mode. Use weekends for content and subscriptions, weekdays for retargeting users already in the funnel.'},
+      {tag:'🔴 Risk',type:'risk',txt:'<strong>Paid ad path averages only 1.4 pages</strong> — users are arriving and leaving quickly. 22,600 sessions with 1.2% conversion means ₹23K in ad spend driving minimal purchase depth. Landing page to product journey is broken.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Add related product recommendations</strong> on the home page to push paid users from the 1.4-page path toward the 4.8-page purchase path. A 1-page increase in avg depth correlates with 2.1x conversion lift based on current data.'},
+    ]
+  },
+  'active-time':{
+    title:'Avg Active Time Spent (App)',icon:'🕐',iconBg:'rgba(0,200,150,0.15)',
+    stats:[
+      {lbl:'Overall Avg (All Platforms)',val:'3.55 min',sub:'Per active user per session',col:'#00C896'},
+      {lbl:'iOS Avg Session',val:'44.5 min',sub:'↑ Most engaged platform by 38x',col:'#06B6D4'},
+      {lbl:'Android Avg Session',val:'7.3 min',sub:'↑ +0.4 min vs last month',col:'#7B6EF6'}
+    ],
+    chartTitle:'Avg Session Duration by Platform — Monthly Trend',chartSub:'Is engagement time growing? Compare platform trajectories.',
+    chartType:'bar',
+    chartData:{
+      labels:['Jan','Feb','Mar','Apr'],
+      datasets:[
+        {label:'iOS',data:[38.2,40.1,42.8,44.5],backgroundColor:'rgba(6,182,212,0.8)',borderRadius:5,borderSkipped:false},
+        {label:'Android',data:[5.8,6.2,6.9,7.3],backgroundColor:'rgba(123,110,246,0.7)',borderRadius:5,borderSkipped:false},
+        {label:'Web',data:[0.9,1.0,1.1,1.2],backgroundColor:'rgba(61,156,245,0.65)',borderRadius:5,borderSkipped:false},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v+' min'}},
+    bkTitle:'Active Time by Platform + Conversion Paradox',
+    bkCols:['Platform','Avg Session','Users','Conv Rate','Time-to-Conv Gap'],
+    bkRows:[
+      ['🍎 iOS','44.5 min','0.5% of users',{txt:'2.1%',cls:'mbadge-amber'},'High time, low conv — checkout UX blocker'],
+      ['🤖 Android','7.3 min','30.5% of users',{txt:'1.6%',cls:'mbadge-red'},'Low time + low conv — both need attention'],
+      ['🌐 Web','1.2 min','69% of users',{txt:'3.5%',cls:'mbadge-green'},'Best conv despite shortest session'],
+    ],
+    vizTitle:'Session Time vs Conversion Rate (Paradox)',
+    vizBars:[
+      {name:'iOS: 44.5 min session',val:'2.1% conv',pct:44,col:'#06B6D4'},
+      {name:'Android: 7.3 min session',val:'1.6% conv',pct:7,col:'#7B6EF6'},
+      {name:'Web: 1.2 min session',val:'3.5% conv',pct:1,col:'#3D9CF5'},
+    ],
+    insights:[
+      {tag:'⭐ Insight',type:'win',txt:'<strong>iOS users spend 44.5 min per session — 38x longer than web.</strong> This is your most engaged audience by a massive margin. They love the product. They just aren\'t converting — which means the iOS purchase flow has a specific friction point.'},
+      {tag:'🔴 Risk',type:'risk',txt:'<strong>Web converts best (3.5%) with the SHORTEST sessions (1.2 min).</strong> This means purchase intent, not engagement time, drives conversion on web. iOS users are engaging but not reaching purchase intent. The iOS checkout UX needs a complete audit.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Audit and redesign iOS checkout to match web\'s conversion efficiency.</strong> If iOS converts at even 2.5% (vs current 2.1%), that adds approximately ₹2.8L/month in revenue from existing engaged users — zero acquisition cost.'},
+    ]
+  },
+  'platform-split':{
+    title:'Platform Split',icon:'📊',iconBg:'rgba(6,182,212,0.15)',
+    stats:[
+      {lbl:'iOS Users (App)',val:'0.5%',sub:'⚠ Tiny share — massive opportunity',col:'#06B6D4'},
+      {lbl:'iOS Conv Rate',val:'2.1%',sub:'vs 3.5% on web — 1.4pp gap',col:'#F5A623'},
+      {lbl:'iOS MoM Growth',val:'+14.2%',sub:'Fastest growing platform',col:'#00C896'}
+    ],
+    chartTitle:'Platform Split — Users, Sessions & Time Spent',chartSub:'Same user base, completely different behaviour by platform',
+    chartType:'bar',
+    chartData:{
+      labels:['Web','Android','iOS'],
+      datasets:[
+        {label:'User Share %',data:[69,30.5,0.5],backgroundColor:'rgba(61,156,245,0.7)',borderRadius:5,borderSkipped:false,yAxisID:'yL'},
+        {label:'Avg Session (min)',data:[1.2,7.3,44.5],backgroundColor:'rgba(6,182,212,0.7)',borderRadius:5,borderSkipped:false,yAxisID:'yR'},
+      ]
+    },
+    chartOpts:{yL:{cb:v=>v+'%',label:'User %'},yR:{cb:v=>v+' min',label:'Session min'}},
+    bkTitle:'Full Platform Comparison',
+    bkCols:['Platform','Users','DAU','Avg Session','Bounce','Conv Rate','Growth MoM'],
+    bkRows:[
+      ['🌐 Web','69%','91.5K','1.2 min',{txt:'48%',cls:'mbadge-amber'},'3.5%','+6.2%'],
+      ['🤖 Android','30.5%','91.5K','7.3 min',{txt:'38%',cls:'mbadge-amber'},'1.6%','+8.4%'],
+      ['🍎 iOS','0.5%','143.8K','44.5 min',{txt:'22%',cls:'mbadge-green'},'2.1%',{txt:'+14.2%',cls:'mbadge-teal'}],
+    ],
+    vizTitle:'iOS Paradox — Tiny User Base, Biggest Engagement',
+    vizBars:[
+      {name:'iOS — Avg Session Time',val:'44.5 min',pct:100,col:'#06B6D4'},
+      {name:'Android — Avg Session Time',val:'7.3 min',pct:16,col:'#7B6EF6'},
+      {name:'Web — Avg Session Time',val:'1.2 min',pct:3,col:'#3D9CF5'},
+    ],
+    insights:[
+      {tag:'⭐ Biggest Opportunity',type:'win',txt:'<strong>iOS users spend 44.5 min/session but are only 0.5% of users.</strong> They have the lowest bounce rate (22%) and are growing fastest (+14.2% MoM). This is your highest-LTV user segment — the product-app fit is proven. You just need more of them.'},
+      {tag:'⚠ Risk',type:'risk',txt:'<strong>Web is 69% of users but converts at 3.5% with 1.2 min sessions.</strong> Web users are transactional — they visit, decide quickly, convert or leave. Android has the largest opportunity gap: 30.5% of users, 1.6% conversion, moderate engagement.'},
+      {tag:'💡 Action',type:'action',txt:'<strong>Run iOS-specific acquisition campaigns targeting Android users who already engage for 7+ min.</strong> These users are showing app-like behaviour on Android and are most likely to activate on iOS. Estimated iOS user base growth to 5% would add ₹4.2L/month from higher LTV per user.'},
+    ]
+  }
+};
+
+function openDrill(id){
+  const d=DRILL[id]; if(!d)return;
+  const m=document.getElementById('drill-modal');
+  const gc=gc2, tc=tc2;
+
+  const statsHtml=d.stats.map(s=>`
+    <div class="mstat">
+      <div class="mstat-lbl">${s.lbl}</div>
+      <div class="mstat-val" style="color:${s.col||'#F0EEF8'}">${s.val}</div>
+      <div class="mstat-sub">${s.sub}</div>
+    </div>`).join('');
+
+  const tableHtml=`<table class="modal-table">
+    <thead><tr>${d.bkCols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${d.bkRows.map(r=>`<tr>${r.map(cell=>{
+      if(typeof cell==='object' && cell.cls) return `<td><span class="mbadge ${cell.cls}">${cell.txt}</span></td>`;
+      if(typeof cell==='object') return `<td style="color:${cell.col||'inherit'}">${cell.txt}</td>`;
+      return `<td>${cell}</td>`;
+    }).join('')}</tr>`).join('')}</tbody>
+  </table>`;
+
+  const barsHtml=`<div class="prog-row">${d.vizBars.map(b=>`
+    <div class="prog-item">
+      <div class="prog-top"><span class="prog-name">${b.name}</span><span class="prog-val">${b.val}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${b.pct}%;background:${b.col}"></div></div>
+    </div>`).join('')}</div>`;
+
+  const insightHtml=d.insights.map(i=>`
+    <div class="modal-iitem">
+      <div class="modal-itag ${i.type==='win'?'itag-win':i.type==='risk'?'itag-risk':'itag-action'}">${i.tag}</div>
+      <div class="modal-itext">${i.txt}</div>
+    </div>`).join('');
+
+  m.innerHTML=`
+    <div class="modal-hdr">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="modal-icon" style="background:${d.iconBg}">${d.icon}</div>
+        <div><div class="modal-title">${d.title}</div><div class="modal-sub">Drill-down · Traffic & Acquisition</div></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-period-row">
+      <div class="mpicker">
+        ${['Today','7D','30D','MTD','YTD'].map((l,i)=>`<button class="mpb ${i===2?'active':''}" onclick="this.closest('.mpicker').querySelectorAll('.mpb').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${l}</button>`).join('')}
+      </div>
+      <span style="font-size:10px;color:var(--text-3)">Period updates stat cards only</span>
+    </div>
+    <div class="modal-stats">${statsHtml}</div>
+    <div class="modal-divider"></div>
+    <div class="modal-chart-sec">
+      <div class="modal-chart-title">${d.chartTitle}</div>
+      <div class="modal-chart-sub">${d.chartSub}</div>
+      <div class="modal-chart-wrap"><canvas id="drill-chart"></canvas></div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-two-col">
+      <div class="modal-col-card"><div class="modal-col-title">${d.bkTitle}</div>${tableHtml}</div>
+      <div class="modal-col-card"><div class="modal-col-title">${d.vizTitle}</div>${barsHtml}</div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-insight">
+      <div class="modal-insight-hdr"><div class="modal-insight-badge">🧠 Growth Intelligence</div><span style="font-size:10px;color:var(--text-3)">Based on ${d.title}</span></div>
+      <div class="modal-insight-grid">${insightHtml}</div>
+    </div>`;
+
+  document.getElementById('drill-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+
+  requestAnimationFrame(()=>{
+    if(activeDrillChart){activeDrillChart.destroy();activeDrillChart=null;}
+    const ctx=document.getElementById('drill-chart');
+    if(!ctx)return;
+    const o=d.chartOpts||{};
+    const yLcb=o.yL?.cb||(v=>v);
+    const yRcb=o.yR?.cb||(v=>v);
+    const isStacked=o.stacked||false;
+    activeDrillChart=new Chart(ctx,{
+      type:d.chartType,
+      data:d.chartData,
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...tip2}},
+        scales:{
+          yL:{position:'left',grid:{color:gc2},ticks:{color:tc2,font:{size:10},callback:yLcb},border:{display:false},stacked:isStacked,...(o.yL?.min!==undefined?{min:o.yL.min}:{}),...(o.yL?.max!==undefined?{max:o.yL.max}:{})},
+          yR:d.chartData.datasets.some(ds=>ds.yAxisID==='yR')?{position:'right',grid:{display:false},ticks:{color:tc2,font:{size:10},callback:yRcb},border:{display:false}}:{display:false},
+          x:{grid:{color:gc2},ticks:{color:tc2,font:{size:10}},border:{display:false},stacked:isStacked}
+        }
+      }
+    });
+  });
+}
+
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('drill-overlay'))return;
+  document.getElementById('drill-overlay').classList.remove('open');
+  document.body.style.overflow='';
+  if(activeDrillChart){activeDrillChart.destroy();activeDrillChart=null;}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+updateAUGCard();
+updateSessionChart();
+renderCohort();
+</script>
+</body>
+</html>

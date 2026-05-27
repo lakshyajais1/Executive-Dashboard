@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>nyx.today — Executive Summary</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#090812;--bg-card:#100E1F;--bg-elevated:#161328;--bg-header:#1A1730;
+  --border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,0.13);
+  --text:#F0EEF8;--text-2:#8B87A8;--text-3:#5A566E;
+  --green:#00C896;--green-dim:rgba(0,200,150,0.12);
+  --red:#FF4D6A;--red-dim:rgba(255,77,106,0.1);
+  --amber:#F5A623;--amber-dim:rgba(245,166,35,0.1);
+  --purple:#7B6EF6;--purple-dim:rgba(123,110,246,0.1);
+  --blue:#3D9CF5;--r:10px;--r-sm:6px;--r-lg:14px;
+}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;padding:20px;
+  background-image:radial-gradient(ellipse 80% 40% at 50% -10%,rgba(123,110,246,0.08) 0%,transparent 70%),
+  radial-gradient(ellipse 40% 30% at 90% 20%,rgba(0,200,150,0.04) 0%,transparent 60%);}
+button,select{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;outline:none}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#7B6EF6,#00C896);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+.brand-name{font-size:17px;font-weight:700;letter-spacing:-0.3px}
+.brand-sub{font-size:11px;color:var(--text-2);margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.last-updated{font-size:11px;color:var(--text-3);display:flex;align-items:center;gap:5px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+.period-label{font-size:11px;color:var(--text-2);background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;padding:4px 12px;white-space:nowrap}
+.period-label span{color:var(--purple);font-weight:600}
+
+/* ── PERIOD PICKER ── */
+.period-picker{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);padding:4px;gap:3px}
+.period-btn{padding:7px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s;white-space:nowrap}
+.period-btn:hover{color:var(--text)}
+.period-btn.active{background:var(--purple);color:#fff;box-shadow:0 2px 12px rgba(123,110,246,0.4)}
+.period-btn.active.mtd-btn{background:var(--amber);color:#fff;box-shadow:0 2px 12px rgba(245,166,35,0.4)}
+.mtd-strip.highlighted .mtd-card{border-color:rgba(245,166,35,0.3);box-shadow:0 0 0 1px rgba(245,166,35,0.1)}
+.custom-range{display:none;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border-bright);border-radius:var(--r);padding:6px 12px}
+.custom-range.visible{display:flex}
+.custom-range input[type="date"]{background:transparent;border:none;color:var(--text-2);font-size:12px;font-family:'DM Sans',sans-serif}
+.custom-range input[type="date"]::-webkit-calendar-picker-indicator{filter:invert(0.5)}
+
+/* ── KPI GRID — always 4 columns, max 2 rows ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;position:relative;overflow:hidden;transition:border-color 0.2s,transform 0.15s;cursor:pointer;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r-lg) var(--r-lg) 0 0;opacity:0;transition:opacity 0.2s}
+.kpi-card:hover{border-color:var(--border-bright);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+.kpi-card:hover::before{opacity:1}
+.kpi-card.up::before{background:linear-gradient(90deg,var(--green),transparent)}
+.kpi-card.down::before{background:linear-gradient(90deg,var(--red),transparent)}
+.kpi-card.warn::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.kpi-card .drill-hint{position:absolute;bottom:10px;right:12px;font-size:9px;color:var(--text-3);opacity:0;transition:opacity 0.2s;display:flex;align-items:center;gap:3px}
+.kpi-card:hover .drill-hint{opacity:1}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.kpi-label{font-size:11px;color:var(--text-2);font-weight:500;line-height:1.4}
+.kpi-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.kpi-value{font-size:22px;font-weight:700;letter-spacing:-0.5px;line-height:1;margin-bottom:7px}
+.kpi-bottom{display:flex;align-items:center;justify-content:space-between}
+.kpi-delta{font-size:11px;font-weight:500;display:flex;align-items:center;gap:3px}
+.delta-up{color:var(--green)}.delta-down{color:var(--red)}.delta-warn{color:var(--amber)}.delta-neutral{color:var(--text-2)}
+.kpi-vs{font-size:10px;color:var(--text-3)}
+
+/* ── MTD STRIP ── */
+.mtd-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.mtd-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px}
+.mtd-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mtd-label{font-size:11px;color:var(--text-2);font-weight:500}
+.mtd-badge{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:500}
+.mtd-values{display:flex;align-items:flex-end;gap:12px;margin-bottom:10px}
+.mtd-current{font-size:26px;font-weight:700;letter-spacing:-0.8px}
+.mtd-prev{font-size:13px;color:var(--text-3);padding-bottom:4px}
+.mtd-progress-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text-2);margin-bottom:5px}
+.mtd-track{height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.mtd-fill{height:100%;border-radius:3px}
+
+/* ── 2 CHARTS GRID ── */
+.charts-2-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:780px){.charts-2-grid{grid-template-columns:1fr}}
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;transition:border-color 0.2s}
+.chart-card:hover{border-color:var(--border-bright)}
+.chart-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.chart-card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.chart-card-sub{font-size:10px;color:var(--text-2)}
+.ctrl-select{padding:5px 10px;border-radius:var(--r-sm);font-size:11px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-2);transition:border-color 0.15s}
+.ctrl-select:hover{border-color:var(--border-bright)}
+.chart-legend{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap}
+.cl-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-2)}
+.cl-line{width:12px;height:2px;border-radius:1px;display:inline-block}
+.chart-note{font-size:10px;color:var(--text-3);margin-top:8px}
+
+/* ── INSIGHT PANEL ── */
+.insight-panel{background:linear-gradient(135deg,rgba(123,110,246,0.08),rgba(0,200,150,0.04));border:1px solid rgba(123,110,246,0.2);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:14px}
+.insight-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.insight-badge{font-size:10px;font-weight:600;color:#7B6EF6;background:rgba(123,110,246,0.12);border:1px solid rgba(123,110,246,0.25);border-radius:20px;padding:3px 10px;text-transform:uppercase;letter-spacing:0.04em}
+.insight-generated{font-size:10px;color:var(--text-3)}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.insight-item{background:rgba(0,0,0,0.2);border-radius:var(--r-sm);padding:11px 13px;border:1px solid rgba(255,255,255,0.04)}
+.insight-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+.tag-win{color:var(--green)}.tag-risk{color:var(--red)}.tag-action{color:var(--amber)}
+.insight-text{font-size:11px;color:var(--text-2);line-height:1.6}
+.insight-text strong{color:var(--text);font-weight:600}
+
+/* ── SUMMARY FOOTER ── */
+.summary-footer{display:flex;gap:20px;padding:12px 18px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-lg);flex-wrap:wrap}
+.sf-item{font-size:11px;color:var(--text-2)}.sf-item span{color:var(--text);font-weight:600}
+.sf-divider{width:1px;background:var(--border);flex-shrink:0}
+
+/* ── CUSTOMIZE ── */
+.customize-wrap{position:relative}
+.customize-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r-sm);background:var(--purple-dim);border:1px solid rgba(123,110,246,0.3);color:#AFA9EC;font-size:12px;font-weight:500;transition:all 0.15s}
+.customize-btn:hover{background:rgba(123,110,246,0.2);color:#fff}
+.customize-drawer{display:none;position:absolute;top:calc(100% + 8px);right:0;width:360px;background:var(--bg-header);border:1px solid var(--border-bright);border-radius:var(--r-lg);padding:16px;z-index:100;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.customize-drawer.open{display:block}
+.cust-title{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.cust-close{font-size:11px;color:var(--text-2);background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-sm);padding:4px 9px}
+.cust-grid{display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto}
+.cust-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--bg-card)}
+.cust-item input[type="checkbox"]{width:15px;height:15px;accent-color:var(--purple);cursor:pointer;flex-shrink:0}
+.cust-item-label{font-size:12px;font-weight:500}
+.cust-item-sub{font-size:10px;color:var(--text-2);margin-top:1px}
+.sec-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.sec-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px}
+.sec-title-dot{width:6px;height:6px;border-radius:2px}
+
+/* ══ DRILL-DOWN MODAL ══ */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,4,15,0.85);backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#12102A;border:1px solid rgba(255,255,255,0.1);border-radius:18px;width:100%;max-width:900px;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 40px 100px rgba(0,0,0,0.7);animation:modalIn 0.25s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-header{padding:20px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.modal-header-left{display:flex;align-items:center;gap:12px}
+.modal-metric-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.modal-metric-name{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.modal-metric-sub{font-size:11px;color:var(--text-2);margin-top:2px}
+.modal-close{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text-2);font-size:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s}
+.modal-close:hover{background:rgba(255,77,106,0.15);color:var(--red);border-color:var(--red)}
+.modal-period-row{display:flex;align-items:center;gap:10px;padding:14px 24px;flex-wrap:wrap}
+.modal-period-picker{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px}
+.mpb{padding:5px 11px;border-radius:5px;font-size:11px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s}
+.mpb:hover{color:var(--text)}
+.mpb.active{background:var(--purple);color:#fff}
+.modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 24px 16px}
+.mstat{background:var(--bg-elevated);border:1px solid var(--border);border-radius:11px;padding:14px 16px}
+.mstat-label{font-size:10px;color:var(--text-2);margin-bottom:6px;font-weight:500}
+.mstat-value{font-size:20px;font-weight:700;letter-spacing:-0.4px;margin-bottom:4px}
+.mstat-sub{font-size:10px;color:var(--text-3)}
+.modal-chart-section{padding:0 24px 16px}
+.modal-chart-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:4px}
+.modal-chart-sub{font-size:10px;color:var(--text-2);margin-bottom:12px}
+.modal-chart-wrap{position:relative;height:200px}
+.modal-two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 16px}
+.modal-col-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:11px;padding:14px 16px}
+.modal-col-title{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.modal-table{width:100%;border-collapse:collapse;font-size:12px}
+.modal-table th{padding:7px 10px;font-size:10px;color:var(--purple);text-align:left;font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.04em}
+.modal-table td{padding:9px 10px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
+.modal-table tr:last-child td{border-bottom:none}
+.modal-table tr:hover td{background:rgba(255,255,255,0.02)}
+.mini-bar-wrap{display:flex;align-items:center;gap:7px}
+.mini-bar-track{width:70px;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;flex-shrink:0}
+.mini-bar-fill{height:100%;border-radius:2px}
+.modal-insight{margin:0 24px 20px;background:linear-gradient(135deg,rgba(123,110,246,0.08),rgba(0,200,150,0.04));border:1px solid rgba(123,110,246,0.2);border-radius:11px;padding:14px 16px}
+.modal-insight-hdr{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.modal-insight-badge{font-size:10px;font-weight:700;color:var(--purple);background:rgba(123,110,246,0.12);border:1px solid rgba(123,110,246,0.2);border-radius:20px;padding:2px 9px;text-transform:uppercase;letter-spacing:0.04em}
+.modal-insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.modal-iitem{background:rgba(0,0,0,0.25);border-radius:8px;padding:10px 12px;border:1px solid rgba(255,255,255,0.04)}
+.modal-itag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.modal-itext{font-size:11px;color:var(--text-2);line-height:1.6}
+.modal-itext strong{color:var(--text)}
+.modal-divider{height:1px;background:var(--border);margin:0 24px 16px}
+.progress-row{display:flex;flex-direction:column;gap:10px}
+.prog-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.prog-name{color:var(--text);font-weight:500}
+.prog-val{color:var(--text-2);font-family:'DM Mono',monospace}
+.prog-track{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px}
+.mbadge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.mbadge-green{background:rgba(0,200,150,0.15);color:var(--green)}
+.mbadge-red{background:rgba(255,77,106,0.15);color:var(--red)}
+.mbadge-amber{background:rgba(245,166,35,0.15);color:var(--amber)}
+.mbadge-blue{background:rgba(61,156,245,0.15);color:var(--blue)}
+
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.modal{max-height:95vh}.modal-stats{grid-template-columns:1fr 1fr}.modal-insight-grid{grid-template-columns:1fr}.modal-two-col{grid-template-columns:1fr}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.modal-stats{grid-template-columns:1fr}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.kpi-card{animation:fadeUp 0.4s ease both}
+.kpi-card:nth-child(1){animation-delay:.05s}.kpi-card:nth-child(2){animation-delay:.10s}.kpi-card:nth-child(3){animation-delay:.15s}.kpi-card:nth-child(4){animation-delay:.20s}
+.kpi-card:nth-child(5){animation-delay:.25s}.kpi-card:nth-child(6){animation-delay:.30s}.kpi-card:nth-child(7){animation-delay:.35s}.kpi-card:nth-child(8){animation-delay:.40s}
+</style>
+</head>
+<body>
+
+<!-- ═══ MODAL OVERLAY ══ -->
+<div class="modal-overlay" id="drill-overlay" onclick="closeModal(event)">
+  <div class="modal" id="drill-modal"></div>
+</div>
+
+<!-- ═══ TOPBAR ══ -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">nx</div>
+    <div><div class="brand-name">nyx.today</div><div class="brand-sub">Executive Summary — B2C Analytics</div></div>
+  </div>
+  <div class="topbar-right">
+    <div class="last-updated"><div class="live-dot"></div>Updated 2 min ago</div>
+    <div class="period-label">Viewing: <span id="period-label-text">Last 30 Days</span></div>
+    <div class="customize-wrap">
+      <button class="customize-btn" onclick="toggleCustomize()">⚙ Customize</button>
+      <div class="customize-drawer" id="customize-drawer">
+        <div class="cust-title">Customize Cards <button class="cust-close" onclick="toggleCustomize()">✕ Close</button></div>
+        <div class="cust-grid" id="cust-grid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PERIOD PICKER ══ -->
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+  <div class="period-picker">
+    <button class="period-btn" onclick="setPeriod('today',this)">Today</button>
+    <button class="period-btn" onclick="setPeriod('7d',this)">7 Days</button>
+    <button class="period-btn active" onclick="setPeriod('30d',this)">30 Days</button>
+    <button class="period-btn mtd-btn" onclick="setPeriod('mtd',this)">MTD</button>
+    <button class="period-btn" onclick="setPeriod('ytd',this)">YTD</button>
+    <button class="period-btn" onclick="setPeriod('custom',this)">Custom</button>
+  </div>
+  <div class="custom-range" id="custom-range">
+    <input type="date" id="date-from" value="2025-04-01"/>
+    <span style="color:var(--text-3);font-size:12px">→</span>
+    <input type="date" id="date-to" value="2025-04-30"/>
+    <button onclick="applyCustomRange()" style="padding:5px 12px;border-radius:var(--r-sm);background:var(--purple);color:#fff;font-size:11px;font-weight:600">Apply</button>
+  </div>
+</div>
+
+<!-- ═══ KPI GRID — 8 cards, 4×2 ══ -->
+<div class="sec-title-row">
+  <div class="sec-title"><div class="sec-title-dot" style="background:var(--purple)"></div>Key Performance Indicators <span style="font-size:11px;color:var(--text-3);font-weight:400" id="kpi-count-label">— 8 metrics</span></div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-3)">
+    <span>Click any card for drill-down</span>
+    <span style="color:var(--purple)">↗</span>
+  </div>
+</div>
+<div class="kpi-grid" id="kpi-grid"></div>
+
+<!-- ═══ MTD STRIP ══ -->
+<div class="sec-title-row" style="margin-top:4px">
+  <div class="sec-title">
+    <div class="sec-title-dot" style="background:var(--amber)"></div>
+    MTD Trackers
+    <span style="font-size:10px;color:var(--text-3);font-weight:400;margin-left:4px">— Always Month-to-Date</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-3)">
+    <span style="background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.25);color:var(--amber);padding:3px 9px;border-radius:20px;font-weight:500">📌 Fixed to current month · not affected by period filter above</span>
+  </div>
+</div>
+<div class="mtd-strip">
+  <div class="mtd-card" style="border-color:rgba(0,200,150,0.15)">
+    <div class="mtd-top">
+      <div>
+        <div class="mtd-label">📅 MTD Revenue vs Last MTD</div>
+        <div style="font-size:9px;color:var(--text-3);margin-top:2px">Always shows current month · independent of period filter</div>
+      </div>
+      <div class="mtd-badge" style="background:var(--green-dim);color:var(--green)">↑ 18.3% ahead</div>
+    </div>
+    <div class="mtd-values"><div class="mtd-current" style="color:var(--green)">₹59.6M</div><div class="mtd-prev">vs ₹50.4M last MTD</div></div>
+    <div class="mtd-progress-label"><span>Month-to-date progress</span><span style="color:var(--amber)">₹59.6M of ₹70M target · 85%</span></div>
+    <div class="mtd-track"><div class="mtd-fill" style="width:85%;background:linear-gradient(90deg,var(--green),#00E5A8)"></div></div>
+  </div>
+  <div class="mtd-card" style="border-color:rgba(245,166,35,0.15)">
+    <div class="mtd-top">
+      <div>
+        <div class="mtd-label">📣 Total Ad Spend — MTD vs Budget</div>
+        <div style="font-size:9px;color:var(--text-3);margin-top:2px">Always shows current month · independent of period filter</div>
+      </div>
+      <div class="mtd-badge" style="background:var(--amber-dim);color:var(--amber)">⚠ 78% used</div>
+    </div>
+    <div class="mtd-values">
+      <div class="mtd-current" style="color:var(--amber)">₹1.87M</div>
+      <div class="mtd-prev">of ₹2.4M budget</div>
+    </div>
+    <div style="display:flex;gap:16px;margin-bottom:8px">
+      <div style="font-size:11px;color:var(--text-2)">Remaining: <span style="color:var(--text);font-weight:600">₹0.53M</span></div>
+      <div style="font-size:11px;color:var(--text-2)">Days left: <span style="color:var(--text);font-weight:600">22 days</span></div>
+      <div style="font-size:11px;color:var(--text-2)">Daily burn: <span style="color:var(--amber);font-weight:600">₹85K/day</span></div>
+    </div>
+    <div class="mtd-progress-label"><span>Budget consumed</span><span style="color:var(--red)">⚠ At this rate, exhausted in ~6 days</span></div>
+    <div class="mtd-track"><div class="mtd-fill" style="width:78%;background:linear-gradient(90deg,var(--amber),#FFD97D)"></div></div>
+  </div>
+</div>
+
+<!-- ═══ 2 CHARTS ══ -->
+<div class="charts-2-grid">
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <div>
+        <div class="chart-card-title">Gross vs Net Revenue</div>
+        <div class="chart-card-sub">Actual revenue only · no forecast data</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="chart-legend" style="margin:0">
+          <div class="cl-item"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--green)"></span>Gross</div>
+          <div class="cl-item"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--purple)"></span>Net</div>
+        </div>
+        <select class="ctrl-select" id="revPeriodSel" onchange="updateRevChart()">
+          <option value="monthly">Monthly</option>
+          <option value="weekly">Weekly</option>
+        </select>
+      </div>
+    </div>
+    <div style="position:relative;height:200px;margin-top:14px"><canvas id="revTrendChart"></canvas></div>
+    <div class="chart-note" style="margin-top:10px">📌 Net = Gross after refunds & fees deducted</div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <div>
+        <div class="chart-card-title">New Customers vs Churned</div>
+        <div class="chart-card-sub">Net customer growth per month</div>
+      </div>
+      <div class="chart-legend" style="margin:0">
+        <div class="cl-item"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--green)"></span>New</div>
+        <div class="cl-item"><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--red)"></span>Churned</div>
+      </div>
+    </div>
+    <div style="position:relative;height:200px;margin-top:14px"><canvas id="custGrowthChart"></canvas></div>
+    <div class="chart-note" style="margin-top:10px">📌 Hover each bar to see net growth</div>
+  </div>
+</div>
+
+<!-- ═══ INSIGHT PANEL ══ -->
+<div class="insight-panel">
+  <div class="insight-header"><div class="insight-badge">🧠 AI Trend & Insight</div><div class="insight-generated">Auto-generated · Last 30 days</div></div>
+  <div class="insight-grid">
+    <div class="insight-item"><div class="insight-tag tag-win">✅ Win</div><div class="insight-text"><strong>Revenue up ₹1.3M (+18.3%)</strong> vs last period. Paid channel is the primary driver — contributing 43% of total revenue with a strong ROAS of 3.6x, above the D2C benchmark of 3x.</div></div>
+    <div class="insight-item" style="border-color:rgba(255,77,106,0.15)"><div class="insight-tag tag-risk">🔴 Spend Alert</div><div class="insight-text"><strong>Total Ad Spend: ₹1.87M</strong> — 78% of ₹2.4M monthly budget consumed. At ₹85K/day burn rate, <strong>budget exhausts in ~6 days</strong>. Pause Twitter/X (1.6x ROAS) immediately to extend runway.</div></div>
+    <div class="insight-item"><div class="insight-tag tag-action">💡 Action</div><div class="insight-text"><strong>Conversion rate at 2.8%</strong> is below industry avg of 3–4%. Fixing checkout friction could unlock <strong>+₹400K revenue</strong> without additional spend.</div></div>
+  </div>
+</div>
+
+<!-- ═══ SUMMARY FOOTER ══ -->
+<div class="summary-footer">
+  <div class="sf-item">Period: <span id="footer-period">Last 30 Days</span></div>
+  <div class="sf-divider"></div>
+  <div class="sf-item">Total Metrics: <span>8</span></div>
+  <div class="sf-divider"></div>
+  <div class="sf-item">Healthy: <span style="color:var(--green)">5</span></div>
+  <div class="sf-divider"></div>
+  <div class="sf-item">Watch: <span style="color:var(--amber)">2</span></div>
+  <div class="sf-divider"></div>
+  <div class="sf-item">Critical: <span style="color:var(--red)">1</span></div>
+  <div class="sf-divider"></div>
+  <div class="sf-item">Monthly Target: <span style="color:var(--amber)">85% achieved</span></div>
+</div>
+
+<script>
+const gc='rgba(255,255,255,0.04)',tc='#8B87A8';
+const tip={backgroundColor:'#1A1730',titleColor:'#F0EEF8',bodyColor:'#8B87A8',borderColor:'rgba(123,110,246,0.25)',borderWidth:1,padding:10,cornerRadius:8};
+const MONTHS=['Jan','Feb','Mar','Apr'];
+
+/* ══ KPI DATA — removed mtd-rev, ltv-cac, churn · added spend ══ */
+const PERIODS={
+  today:{label:'Today',cards:{
+    'total-rev':{value:'₹3.20M',delta:'+6.7%',dir:'up',vs:'vs yesterday'},
+    'net-rev':{value:'₹1.78M',delta:'+4.1%',dir:'up',vs:'vs yesterday'},
+    'gross-margin':{value:'55.6%',delta:'+0.3%',dir:'up',vs:'vs yesterday'},
+    'rev-growth':{value:'+6.7%',delta:'+1.2%',dir:'up',vs:'vs yesterday'},
+    'roas':{value:'3.60x',delta:'+0.1x',dir:'up',vs:'vs yesterday'},
+    'cac':{value:'₹507',delta:'+2.1%',dir:'warn',vs:'monitor'},
+    'new-cust':{value:'1,240',delta:'+8.3%',dir:'up',vs:'vs yesterday'},
+    'conv-rate':{value:'2.8%',delta:'-0.1%',dir:'warn',vs:'industry 3–4%'},
+    'spend':{value:'₹86K',delta:'+3.2%',dir:'warn',vs:'vs yesterday'},
+  }},
+  '7d':{label:'Last 7 Days',cards:{
+    'total-rev':{value:'₹21.4M',delta:'+11.2%',dir:'up',vs:'vs prev 7 days'},
+    'net-rev':{value:'₹12.1M',delta:'+9.4%',dir:'up',vs:'vs prev 7 days'},
+    'gross-margin':{value:'56.5%',delta:'+1.1%',dir:'up',vs:'vs prev 7 days'},
+    'rev-growth':{value:'+11.2%',delta:'+3.1%',dir:'up',vs:'vs prev 7 days'},
+    'roas':{value:'3.52x',delta:'+0.2x',dir:'up',vs:'vs prev 7 days'},
+    'cac':{value:'₹492',delta:'-3.0%',dir:'up',vs:'improving'},
+    'new-cust':{value:'7,840',delta:'+12.5%',dir:'up',vs:'vs prev 7 days'},
+    'conv-rate':{value:'2.9%',delta:'+0.1%',dir:'up',vs:'industry 3–4%'},
+    'spend':{value:'₹435K',delta:'+5.1%',dir:'warn',vs:'vs prev 7 days'},
+  }},
+  '30d':{label:'Last 30 Days',cards:{
+    'total-rev':{value:'₹8.70M',delta:'+18.3%',dir:'up',vs:'vs last month'},
+    'net-rev':{value:'₹4.82M',delta:'+12.1%',dir:'up',vs:'vs last month'},
+    'gross-margin':{value:'55.4%',delta:'+2.1%',dir:'up',vs:'vs last month'},
+    'rev-growth':{value:'+18.3%',delta:'+2.1%',dir:'up',vs:'vs last month'},
+    'roas':{value:'3.60x',delta:'+0.48x',dir:'up',vs:'above benchmark'},
+    'cac':{value:'₹507',delta:'+2.1%',dir:'warn',vs:'monitor closely'},
+    'new-cust':{value:'45.2K',delta:'+15.7%',dir:'up',vs:'vs last month'},
+    'conv-rate':{value:'2.8%',delta:'-0.4%',dir:'warn',vs:'industry 3–4%'},
+    'spend':{value:'₹1.87M',delta:'+8.4%',dir:'warn',vs:'78% of budget'},
+  }},
+  mtd:{label:'Month-to-Date',cards:{
+    'total-rev':{value:'₹59.6M',delta:'+18.3%',dir:'up',vs:'vs last MTD'},
+    'net-rev':{value:'₹33.1M',delta:'+14.2%',dir:'up',vs:'vs last MTD'},
+    'gross-margin':{value:'55.5%',delta:'+1.8%',dir:'up',vs:'vs last MTD'},
+    'rev-growth':{value:'+18.3%',delta:'+2.5%',dir:'up',vs:'vs last MTD'},
+    'roas':{value:'3.55x',delta:'+0.3x',dir:'up',vs:'above benchmark'},
+    'cac':{value:'₹501',delta:'+1.2%',dir:'warn',vs:'monitor'},
+    'new-cust':{value:'152K',delta:'+16.2%',dir:'up',vs:'vs last MTD'},
+    'conv-rate':{value:'2.85%',delta:'-0.2%',dir:'warn',vs:'industry 3–4%'},
+    'spend':{value:'₹1.87M',delta:'+7.1%',dir:'warn',vs:'78% of ₹2.4M budget'},
+  }},
+  ytd:{label:'Year-to-Date',cards:{
+    'total-rev':{value:'₹34.8M',delta:'+22.4%',dir:'up',vs:'vs last YTD'},
+    'net-rev':{value:'₹19.3M',delta:'+18.7%',dir:'up',vs:'vs last YTD'},
+    'gross-margin':{value:'55.5%',delta:'+3.2%',dir:'up',vs:'vs last YTD'},
+    'rev-growth':{value:'+22.4%',delta:'+5.1%',dir:'up',vs:'vs last YTD'},
+    'roas':{value:'3.48x',delta:'+0.6x',dir:'up',vs:'above benchmark'},
+    'cac':{value:'₹489',delta:'-4.1%',dir:'up',vs:'improving'},
+    'new-cust':{value:'198K',delta:'+24.3%',dir:'up',vs:'vs last YTD'},
+    'conv-rate':{value:'2.9%',delta:'+0.2%',dir:'up',vs:'industry 3–4%'},
+    'spend':{value:'₹8.2M',delta:'+11.3%',dir:'warn',vs:'vs last YTD'},
+  }}
+};
+
+/* ══ 8 KPI CARDS — 4 per row, 2 rows ══ */
+const KPI_META=[
+  {id:'total-rev',   label:'Total Revenue',        icon:'💰',iconBg:'rgba(0,200,150,0.12)'},
+  {id:'net-rev',     label:'Net Revenue',           icon:'📈',iconBg:'rgba(123,110,246,0.12)'},
+  {id:'gross-margin',label:'Gross Margin %',        icon:'📊',iconBg:'rgba(61,156,245,0.12)'},
+  {id:'rev-growth',  label:'Revenue Growth (MoM)',  icon:'🚀',iconBg:'rgba(0,200,150,0.12)'},
+  {id:'roas',        label:'ROAS',                  icon:'🎯',iconBg:'rgba(123,110,246,0.12)'},
+  {id:'cac',         label:'Blended CAC',           icon:'💸',iconBg:'rgba(245,166,35,0.12)'},
+  {id:'new-cust',    label:'New Customers',         icon:'👥',iconBg:'rgba(0,200,150,0.12)'},
+  {id:'conv-rate',   label:'Conversion Rate',       icon:'✅',iconBg:'rgba(123,110,246,0.12)'},
+  /* Spend card — replaces mtd-rev, ltv-cac, churn */
+  {id:'spend',       label:'Total Ad Spend',        icon:'📣',iconBg:'rgba(255,77,106,0.12)'},
+];
+
+/* Default: show only first 8 (4×2 = 2 rows). Spend is slot 9 shown via customize */
+let currentPeriod='30d', visibleCards=KPI_META.slice(0,8).map(k=>k.id);
+/* Add spend to visible by default */
+visibleCards=['total-rev','net-rev','gross-margin','rev-growth','roas','cac','new-cust','conv-rate','spend'];
+
+function renderCards(){
+  const data=PERIODS[currentPeriod].cards;
+  const grid=document.getElementById('kpi-grid');
+  const visible=KPI_META.filter(k=>visibleCards.includes(k.id));
+  document.getElementById('kpi-count-label').textContent=`— ${visible.length} metrics`;
+  /* Force 4-col layout */
+  const cols=Math.min(4,visible.length);
+  grid.style.gridTemplateColumns=`repeat(${cols},1fr)`;
+  grid.innerHTML=visible.map(meta=>{
+    const d=data[meta.id]||{value:'—',delta:'—',dir:'up',vs:''};
+    const dc=d.dir==='up'?'up':d.dir==='down'?'down':'warn';
+    const dClass=d.dir==='up'?'delta-up':d.dir==='down'?'delta-down':'delta-warn';
+    const arrow=d.dir==='up'?'↑':d.dir==='down'?'↓':'⚠';
+    return `<div class="kpi-card ${dc}" onclick="openDrillDown('${meta.id}')">
+      <div class="kpi-top"><div class="kpi-label">${meta.label}</div><div class="kpi-icon" style="background:${meta.iconBg}">${meta.icon}</div></div>
+      <div class="kpi-value">${d.value}</div>
+      <div class="kpi-bottom"><div><div class="kpi-delta ${dClass}">${arrow} ${d.delta}</div><div class="kpi-vs">${d.vs}</div></div></div>
+      <div class="drill-hint">🔍 Click to drill down</div>
+    </div>`;
+  }).join('');
+}
+
+function setPeriod(p,btn){
+  currentPeriod=p;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const label=PERIODS[p]?.label||'Custom Range';
+  document.getElementById('period-label-text').textContent=label;
+  document.getElementById('footer-period').textContent=label;
+  document.getElementById('custom-range').classList.toggle('visible',p==='custom');
+  /* Highlight MTD strip when MTD period is selected */
+  const strip=document.querySelector('.mtd-strip');
+  if(strip) strip.classList.toggle('highlighted', p==='mtd');
+  if(p!=='custom'){renderCards();updateRevChart();}
+}
+function applyCustomRange(){
+  const from=document.getElementById('date-from').value,to=document.getElementById('date-to').value;
+  const label=`${from} → ${to}`;
+  document.getElementById('period-label-text').textContent=label;
+  document.getElementById('footer-period').textContent=label;
+  currentPeriod='30d'; renderCards(); updateRevChart();
+}
+function toggleCustomize(){
+  document.getElementById('customize-drawer').classList.toggle('open');
+  renderCustomize();
+}
+function renderCustomize(){
+  document.getElementById('cust-grid').innerHTML=KPI_META.map(k=>`
+    <label class="cust-item" style="cursor:pointer">
+      <input type="checkbox" ${visibleCards.includes(k.id)?'checked':''} onchange="toggleCard('${k.id}',this.checked)"/>
+      <div><div class="cust-item-label">${k.icon} ${k.label}</div><div class="cust-item-sub">${PERIODS['30d'].cards[k.id]?.value||'—'}</div></div>
+    </label>`).join('');
+}
+function toggleCard(id,checked){
+  if(checked){if(!visibleCards.includes(id))visibleCards.push(id);}
+  else{visibleCards=visibleCards.filter(x=>x!==id);}
+  renderCards();
+}
+document.addEventListener('click',e=>{
+  const w=document.querySelector('.customize-wrap');
+  if(!w.contains(e.target))document.getElementById('customize-drawer').classList.remove('open');
+});
+
+/* ══ CHARTS ══ */
+const REV_DATA={
+  monthly:{labels:MONTHS,gross:[6200000,7100000,7800000,8700000],net:[3500000,3900000,4400000,4820000]},
+  weekly:{labels:['Wk 1','Wk 2','Wk 3','Wk 4'],gross:[1980000,2100000,2310000,2310000],net:[1120000,1190000,1270000,1240000]}
+};
+let revChartInst=null;
+function updateRevChart(){
+  const sel=document.getElementById('revPeriodSel').value,d=REV_DATA[sel];
+  if(revChartInst)revChartInst.destroy();
+  revChartInst=new Chart(document.getElementById('revTrendChart'),{type:'bar',
+    data:{labels:d.labels,datasets:[
+      {label:'Gross',data:d.gross,backgroundColor:'rgba(0,200,150,0.75)',borderRadius:5,borderSkipped:false},
+      {label:'Net',data:d.net,backgroundColor:'rgba(123,110,246,0.75)',borderRadius:5,borderSkipped:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>`${c.dataset.label}: ₹${(c.parsed.y/1e6).toFixed(2)}M`}}},
+      scales:{y:{grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>'₹'+(v/1e6).toFixed(1)+'M'},border:{display:false}},x:{grid:{display:false},ticks:{color:tc,font:{size:10}},border:{display:false}}}}
+  });
+}
+new Chart(document.getElementById('custGrowthChart'),{type:'bar',
+  data:{labels:MONTHS,datasets:[
+    {label:'New',data:[9800,11200,13100,15200],backgroundColor:'rgba(0,200,150,0.75)',borderRadius:5,borderSkipped:false},
+    {label:'Churned',data:[1200,1350,1480,1600],backgroundColor:'rgba(255,77,106,0.65)',borderRadius:5,borderSkipped:false}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,callbacks:{afterBody:items=>{const v=items.map(i=>i.parsed.y);return v.length===2?[`Net growth: +${(v[0]-v[1]).toLocaleString()}`]:[];}}}},
+    scales:{y:{grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v},border:{display:false}},x:{grid:{display:false},ticks:{color:tc,font:{size:10}},border:{display:false}}}}
+});
+
+/* ══ DRILL-DOWN DATA ══ */
+const DRILL={
+  'total-rev':{
+    name:'Total Revenue',icon:'💰',iconBg:'rgba(0,200,150,0.15)',accentColor:'#00C896',
+    stats:[{label:'Current Period',value:'₹8.70M',sub:'Last 30 days'},{label:'vs Last Period',value:'+₹1.3M',sub:'↑ 18.3% growth',color:'#00C896'},{label:'Monthly Target',value:'87%',sub:'₹8.70M of ₹10M goal',color:'#F5A623'}],
+    chartTitle:'Weekly Revenue Trend',chartSub:'Gross revenue broken down by week',
+    chartType:'bar',
+    chartData:{labels:['Wk 1','Wk 2','Wk 3','Wk 4'],datasets:[{label:'Revenue',data:[1920000,2050000,2280000,2450000],backgroundColor:'rgba(0,200,150,0.7)',borderRadius:6,borderSkipped:false}]},
+    chartOpts:{scales:{y:{ticks:{callback:v=>'₹'+(v/1e6).toFixed(1)+'M'}}}},
+    breakdown:{title:'Revenue by Channel',cols:['Channel','Revenue','Share','vs Last Month'],rows:[
+      ['Paid','₹760K','43%',{label:'↑ 12%',cls:'mbadge-green'}],
+      ['Organic','₹420K','24%',{label:'↑ 8%',cls:'mbadge-green'}],
+      ['Direct','₹360K','20%',{label:'↑ 5%',cls:'mbadge-green'}],
+      ['Social','₹135K','8%',{label:'↓ 3%',cls:'mbadge-red'}],
+      ['Referral','₹88K','5%',{label:'↑ 2%',cls:'mbadge-green'}],
+    ],bars:[{name:'Paid',val:'₹760K',pct:100,color:'#00C896'},{name:'Organic',val:'₹420K',pct:55,color:'#7B6EF6'},{name:'Direct',val:'₹360K',pct:47,color:'#3D9CF5'},{name:'Social',val:'₹135K',pct:18,color:'#F5A623'},{name:'Referral',val:'₹88K',pct:12,color:'#8B87A8'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Paid channel is the primary growth driver</strong>, contributing 43% of total revenue at a ROAS of 3.6x.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Social media revenue dropped 3%</strong> despite increased spend. Needs creative refresh.'},
+      {type:'action',tag:'💡 Action',text:'Shift 10% of Social budget to Organic content. <strong>Estimated +₹45K revenue</strong> per month.'},
+    ]
+  },
+  'net-rev':{
+    name:'Net Revenue',icon:'📈',iconBg:'rgba(123,110,246,0.15)',accentColor:'#7B6EF6',
+    stats:[{label:'Net Revenue',value:'₹4.82M',sub:'After all deductions'},{label:'Gross Revenue',value:'₹8.70M',sub:'Before refunds & fees'},{label:'Deduction Rate',value:'44.6%',sub:'Refunds + processing fees',color:'#F5A623'}],
+    chartTitle:'Gross vs Net Revenue — Monthly Trend',chartSub:'See how refunds and fees impact real earnings',
+    chartType:'bar',
+    chartData:{labels:MONTHS,datasets:[{label:'Gross',data:[6200000,7100000,7800000,8700000],backgroundColor:'rgba(0,200,150,0.6)',borderRadius:5,borderSkipped:false},{label:'Net',data:[3500000,3900000,4400000,4820000],backgroundColor:'rgba(123,110,246,0.7)',borderRadius:5,borderSkipped:false}]},
+    chartOpts:{scales:{y:{ticks:{callback:v=>'₹'+(v/1e6).toFixed(1)+'M'}}}},
+    breakdown:{title:'Deduction Breakdown',cols:['Item','Amount','% of Gross','Trend'],rows:[
+      ['Refunds & Returns','₹1.82M','20.9%',{label:'↑ rising',cls:'mbadge-red'}],
+      ['Payment Processing','₹0.87M','10.0%',{label:'Stable',cls:'mbadge-blue'}],
+      ['Platform Fees','₹0.69M','7.9%',{label:'Stable',cls:'mbadge-blue'}],
+      ['Discounts & Coupons','₹0.40M','4.6%',{label:'↓ reduced',cls:'mbadge-green'}],
+    ],bars:[{name:'Refunds',val:'₹1.82M',pct:100,color:'#FF4D6A'},{name:'Processing',val:'₹0.87M',pct:48,color:'#F5A623'},{name:'Platform Fees',val:'₹0.69M',pct:38,color:'#8B87A8'},{name:'Discounts',val:'₹0.40M',pct:22,color:'#3D9CF5'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Net revenue grew 12.1% MoM</strong> — faster than gross, meaning deductions as a % are shrinking.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Refund rate at 20.9% is high</strong>. Industry benchmark is 10–15%.'},
+      {type:'action',tag:'💡 Action',text:'Reducing refund rate to 15% would <strong>add ₹0.52M to net revenue</strong>.'},
+    ]
+  },
+  'gross-margin':{
+    name:'Gross Margin %',icon:'📊',iconBg:'rgba(61,156,245,0.15)',accentColor:'#3D9CF5',
+    stats:[{label:'Gross Margin',value:'55.4%',sub:'Current period'},{label:'Industry Benchmark',value:'60%',sub:'D2C average',color:'#F5A623'},{label:'Gap to Benchmark',value:'-4.6%',sub:'Room for improvement',color:'#FF4D6A'}],
+    chartTitle:'Gross Margin % Trend',chartSub:'How profitability has changed month over month',
+    chartType:'line',
+    chartData:{labels:MONTHS,datasets:[{label:'Gross Margin %',data:[51.2,52.8,54.1,55.4],borderColor:'#3D9CF5',backgroundColor:'rgba(61,156,245,0.08)',tension:0.4,pointRadius:5,pointBackgroundColor:'#3D9CF5',fill:true},{label:'Industry Benchmark',data:[60,60,60,60],borderColor:'rgba(245,166,35,0.5)',borderDash:[6,4],pointRadius:0,tension:0}]},
+    chartOpts:{scales:{y:{min:45,max:65,ticks:{callback:v=>v+'%'}}}},
+    breakdown:{title:'Margin by Revenue Category',cols:['Category','Revenue','COGS','Margin %','Status'],rows:[
+      ['Subscription','₹4.2M','₹1.5M','64.3%',{label:'✅ Healthy',cls:'mbadge-green'}],
+      ['One-time Purchase','₹2.8M','₹1.4M','50.0%',{label:'⚠ Watch',cls:'mbadge-amber'}],
+      ['Add-ons','₹1.7M','₹0.9M','47.1%',{label:'⚠ Watch',cls:'mbadge-amber'}],
+    ],bars:[{name:'Subscription',val:'64.3%',pct:100,color:'#00C896'},{name:'One-time',val:'50.0%',pct:78,color:'#F5A623'},{name:'Add-ons',val:'47.1%',pct:73,color:'#FF4D6A'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Margin improved 4.2pp over 4 months</strong> — subscription mix growing is the key driver.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Still 4.6pp below the 60% industry benchmark.</strong>'},
+      {type:'action',tag:'💡 Action',text:'Every 1% shift to subscription revenue <strong>adds ~0.3pp to gross margin</strong>.'},
+    ]
+  },
+  'rev-growth':{
+    name:'Revenue Growth (MoM)',icon:'🚀',iconBg:'rgba(0,200,150,0.15)',accentColor:'#00C896',
+    stats:[{label:'Growth This Month',value:'+18.3%',sub:'MoM revenue growth'},{label:'6-Month Avg',value:'+14.2%',sub:'Average monthly growth',color:'#00C896'},{label:'vs Last Month',value:'+2.1pp',sub:'Acceleration signal',color:'#00C896'}],
+    chartTitle:'Month-over-Month Revenue Growth %',chartSub:'Is growth accelerating or decelerating?',
+    chartType:'bar',
+    chartData:{labels:['Nov','Dec','Jan','Feb','Mar','Apr'],datasets:[{label:'MoM Growth %',data:[9.2,11.8,13.1,14.4,16.2,18.3],backgroundColor:['rgba(0,200,150,0.5)','rgba(0,200,150,0.55)','rgba(0,200,150,0.6)','rgba(0,200,150,0.65)','rgba(0,200,150,0.7)','rgba(0,200,150,0.85)'],borderRadius:6,borderSkipped:false}]},
+    chartOpts:{scales:{y:{ticks:{callback:v=>v+'%'}}}},
+    breakdown:{title:'Growth Drivers by Channel',cols:['Channel','Growth','Revenue Added','Key Reason'],rows:[
+      ['Paid','↑ 22%','₹138K',{label:'Budget ↑ 15%',cls:'mbadge-green'}],
+      ['Organic','↑ 18%','₹64K',{label:'SEO improving',cls:'mbadge-green'}],
+      ['Direct','↑ 14%','₹44K',{label:'Repeat buyers',cls:'mbadge-blue'}],
+      ['Social','↓ 3%','−₹4K',{label:'Creative fatigue',cls:'mbadge-red'}],
+    ],bars:[{name:'Paid ↑22%',val:'₹138K added',pct:100,color:'#00C896'},{name:'Organic ↑18%',val:'₹64K added',pct:46,color:'#7B6EF6'},{name:'Direct ↑14%',val:'₹44K added',pct:32,color:'#3D9CF5'},{name:'Social ↓3%',val:'−₹4K',pct:3,color:'#FF4D6A'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>6 consecutive months of accelerating growth</strong> — from 9.2% in November to 18.3% in April.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Growth is highly dependent on paid spend</strong>. Budget cuts could impact growth significantly.'},
+      {type:'action',tag:'💡 Action',text:'<strong>Building organic to 30% of revenue</strong> would de-risk the growth trajectory.'},
+    ]
+  },
+  'roas':{
+    name:'ROAS',icon:'🎯',iconBg:'rgba(123,110,246,0.15)',accentColor:'#7B6EF6',
+    stats:[{label:'Blended ROAS',value:'3.60x',sub:'All platforms combined'},{label:'D2C Benchmark',value:'3.0x',sub:'Industry average',color:'#00C896'},{label:'Best Platform',value:'Google 3.5x',sub:'Highest performing platform',color:'#00C896'}],
+    chartTitle:'ROAS Trend by Month',chartSub:'Overall ROAS improving — but check platform breakdown',
+    chartType:'line',
+    chartData:{labels:MONTHS,datasets:[{label:'ROAS',data:[3.12,3.25,3.48,3.60],borderColor:'#7B6EF6',backgroundColor:'rgba(123,110,246,0.08)',tension:0.4,pointRadius:5,pointBackgroundColor:'#7B6EF6',fill:true},{label:'Benchmark (3x)',data:[3,3,3,3],borderColor:'rgba(245,166,35,0.4)',borderDash:[5,4],pointRadius:0}]},
+    chartOpts:{scales:{y:{min:1,max:5,ticks:{callback:v=>v+'x'}}}},
+    breakdown:{title:'ROAS by Platform',cols:['Platform','Spend','Revenue','ROAS','Status'],rows:[
+      ['Google Ads','₹1.25L','₹4.38L','3.5x',{label:'✅ Best',cls:'mbadge-green'}],
+      ['TikTok','₹56K','₹1.68L','3.0x',{label:'✅ Good',cls:'mbadge-green'}],
+      ['Meta','₹98K','₹2.74L','2.8x',{label:'⚠ Average',cls:'mbadge-amber'}],
+      ['LinkedIn','₹74K','₹1.55L','2.1x',{label:'⚠ Below avg',cls:'mbadge-amber'}],
+      ['Twitter/X','₹32K','₹0.51L','1.6x',{label:'🔴 Worst',cls:'mbadge-red'}],
+    ],bars:[{name:'Google 3.5x',val:'₹4.38L rev',pct:100,color:'#00C896'},{name:'TikTok 3.0x',val:'₹1.68L rev',pct:86,color:'#00C896'},{name:'Meta 2.8x',val:'₹2.74L rev',pct:80,color:'#F5A623'},{name:'LinkedIn 2.1x',val:'₹1.55L rev',pct:60,color:'#F5A623'},{name:'Twitter 1.6x',val:'₹0.51L rev',pct:46,color:'#FF4D6A'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Overall ROAS of 3.6x beats the 3x D2C benchmark.</strong> Google Ads is the standout.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Twitter/X at 1.6x ROAS is destroying value.</strong>'},
+      {type:'action',tag:'💡 Action',text:'Pause Twitter/X. <strong>Reallocate ₹32K to TikTok — estimated +₹64K revenue.</strong>'},
+    ]
+  },
+  'cac':{
+    name:'Blended CAC',icon:'💸',iconBg:'rgba(245,166,35,0.15)',accentColor:'#F5A623',
+    stats:[{label:'Blended CAC',value:'₹507',sub:'All channels combined'},{label:'Paid-only CAC',value:'₹1,435',sub:'Paid channels only',color:'#FF4D6A'},{label:'LTV Breakeven',value:'6 months',sub:'Time to recover CAC',color:'#F5A623'}],
+    chartTitle:'Blended CAC vs Paid CAC Trend',chartSub:'Blended includes organic/direct. Paid-only is much higher.',
+    chartType:'line',
+    chartData:{labels:MONTHS,datasets:[{label:'Blended CAC',data:[540,525,514,507],borderColor:'#F5A623',backgroundColor:'rgba(245,166,35,0.07)',tension:0.4,pointRadius:5,pointBackgroundColor:'#F5A623',fill:true,yAxisID:'y'},{label:'Paid CAC',data:[1620,1580,1510,1435],borderColor:'#FF4D6A',backgroundColor:'transparent',tension:0.4,pointRadius:5,pointBackgroundColor:'#FF4D6A',yAxisID:'y2'}]},
+    chartOpts:{scales:{y:{ticks:{callback:v=>'₹'+v}},y2:{position:'right',grid:{display:false},ticks:{callback:v=>'₹'+v}}}},
+    breakdown:{title:'CAC by Acquisition Channel',cols:['Channel','New Customers','Spend','CAC','Efficiency'],rows:[
+      ['Organic','18,200','₹0','~₹120',{label:'✅ Best',cls:'mbadge-green'}],
+      ['Direct','9,800','₹0','~₹85',{label:'✅ Best',cls:'mbadge-green'}],
+      ['Google Ads','8,100','₹1.25L','₹154',{label:'✅ Good',cls:'mbadge-green'}],
+      ['Meta','5,400','₹98K','₹181',{label:'⚠ Watch',cls:'mbadge-amber'}],
+      ['Twitter/X','800','₹32K','₹400',{label:'🔴 High',cls:'mbadge-red'}],
+    ],bars:[{name:'Direct',val:'~₹85',pct:6,color:'#00C896'},{name:'Organic',val:'~₹120',pct:8,color:'#00C896'},{name:'Google',val:'₹154',pct:11,color:'#3D9CF5'},{name:'Meta',val:'₹181',pct:13,color:'#F5A623'},{name:'Twitter',val:'₹400',pct:28,color:'#FF4D6A'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Blended CAC has fallen ₹33 over 4 months</strong> (₹540 → ₹507).'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Paid CAC at ₹1,435 means 14+ months to break even.</strong>'},
+      {type:'action',tag:'💡 Action',text:'Focus retention on paid-acquired customers in months 1–6.'},
+    ]
+  },
+  'new-cust':{
+    name:'New Customers',icon:'👥',iconBg:'rgba(0,200,150,0.15)',accentColor:'#00C896',
+    stats:[{label:'New Customers',value:'45.2K',sub:'This period'},{label:'vs Last Period',value:'+5,900',sub:'↑ 15.7% more customers',color:'#00C896'},{label:'Monthly Goal',value:'91%',sub:'45.2K of 50K target',color:'#F5A623'}],
+    chartTitle:'New Customer Acquisition by Week',chartSub:'Weekly breakdown of new customer additions',
+    chartType:'bar',
+    chartData:{labels:['Wk 1','Wk 2','Wk 3','Wk 4'],datasets:[{label:'New Customers',data:[9800,11200,12300,11900],backgroundColor:'rgba(0,200,150,0.75)',borderRadius:6,borderSkipped:false}]},
+    chartOpts:{scales:{y:{ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'K':v}}}},
+    breakdown:{title:'New Customer Acquisition by Channel',cols:['Channel','New Customers','Share','CAC'],rows:[
+      ['Organic','18,200','40.3%',{label:'~₹120',cls:'mbadge-green'}],
+      ['Direct','9,800','21.7%',{label:'~₹85',cls:'mbadge-green'}],
+      ['Paid (Google)','8,100','17.9%',{label:'₹154',cls:'mbadge-green'}],
+      ['Paid (Meta)','5,100','11.3%',{label:'₹178',cls:'mbadge-amber'}],
+      ['Referral','4,200','9.3%',{label:'₹210',cls:'mbadge-green'}],
+    ],bars:[{name:'Organic',val:'18,200',pct:100,color:'#00C896'},{name:'Direct',val:'9,800',pct:54,color:'#7B6EF6'},{name:'Google',val:'8,100',pct:45,color:'#3D9CF5'},{name:'Meta',val:'5,100',pct:28,color:'#F5A623'},{name:'Referral',val:'4,200',pct:23,color:'#8B87A8'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Organic is the largest channel at 40.3%</strong> with the lowest effective CAC of ~₹120.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Paid channels account for 29.2% of new customers.</strong> Budget dependency risk.'},
+      {type:'action',tag:'💡 Action',text:'<strong>Doubling referral volume to 18% would add 4,200 customers/month at low cost.</strong>'},
+    ]
+  },
+  'conv-rate':{
+    name:'Conversion Rate',icon:'✅',iconBg:'rgba(123,110,246,0.15)',accentColor:'#7B6EF6',
+    stats:[{label:'Conversion Rate',value:'2.8%',sub:'Visitors who purchase',color:'#F5A623'},{label:'Industry Average',value:'3–4%',sub:'D2C benchmark',color:'#00C896'},{label:'Revenue Opportunity',value:'+₹400K',sub:'If rate improves to 3.5%',color:'#00C896'}],
+    chartTitle:'Weekly Conversion Rate Trend',chartSub:'Conversion has been declining — funnel optimization needed',
+    chartType:'line',
+    chartData:{labels:['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'],datasets:[{label:'Conversion %',data:[3.2,3.1,2.9,2.8,2.8,2.8],borderColor:'#7B6EF6',backgroundColor:'rgba(123,110,246,0.08)',tension:0.4,pointRadius:5,pointBackgroundColor:'#7B6EF6',fill:true},{label:'Industry Avg (3%)',data:[3,3,3,3,3,3],borderColor:'rgba(0,200,150,0.4)',borderDash:[5,4],pointRadius:0}]},
+    chartOpts:{scales:{y:{min:1,max:5,ticks:{callback:v=>v+'%'}}}},
+    breakdown:{title:'Conversion Rate by Channel & Device',cols:['Source','Visitors','Conversions','Rate','vs Benchmark'],rows:[
+      ['Direct — Desktop','12K','420','3.5%',{label:'✅ Above',cls:'mbadge-green'}],
+      ['Organic — Desktop','10.2K','306','3.0%',{label:'✅ At benchmark',cls:'mbadge-green'}],
+      ['Organic — Mobile','8.3K','158','1.9%',{label:'🔴 Low',cls:'mbadge-red'}],
+      ['Paid — Mobile','9.5K','181','1.9%',{label:'🔴 Low',cls:'mbadge-red'}],
+    ],bars:[{name:'Direct Desktop 3.5%',val:'420 conv',pct:100,color:'#00C896'},{name:'Organic Desktop 3.0%',val:'306 conv',pct:86,color:'#00C896'},{name:'Mobile 1.9%',val:'339 conv',pct:54,color:'#FF4D6A'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Desktop conversion at 3.0–3.5% is at or above benchmark.</strong>'},
+      {type:'risk',tag:'🔴 Critical',text:'<strong>Mobile conversion at only 1.9% — nearly half of desktop.</strong> 54% of traffic is mobile.'},
+      {type:'action',tag:'💡 Action',text:'<strong>Improving mobile rate from 1.9% to 2.8% would add ~₹400K monthly revenue.</strong>'},
+    ]
+  },
+  'spend':{
+    name:'Total Ad Spend',icon:'📣',iconBg:'rgba(255,77,106,0.15)',accentColor:'#FF4D6A',
+    stats:[{label:'Total Spend',value:'₹1.87M',sub:'Last 30 days',color:'#F5A623'},{label:'vs Budget',value:'78%',sub:'₹1.87M of ₹2.4M budget',color:'#F5A623'},{label:'Remaining Budget',value:'₹0.53M',sub:'For rest of month',color:'#00C896'}],
+    chartTitle:'Weekly Ad Spend by Platform',chartSub:'How budget is being consumed week over week',
+    chartType:'bar',
+    chartData:{labels:['Wk 1','Wk 2','Wk 3','Wk 4'],datasets:[
+      {label:'Google',data:[320000,340000,360000,230000],backgroundColor:'rgba(61,156,245,0.75)',borderRadius:5,borderSkipped:false},
+      {label:'Meta',data:[180000,195000,210000,115000],backgroundColor:'rgba(123,110,246,0.75)',borderRadius:5,borderSkipped:false},
+      {label:'Others',data:[80000,85000,90000,55000],backgroundColor:'rgba(245,166,35,0.65)',borderRadius:5,borderSkipped:false}
+    ]},
+    chartOpts:{scales:{y:{stacked:true,ticks:{callback:v=>'₹'+(v/1000).toFixed(0)+'K'}},x:{stacked:true}}},
+    breakdown:{title:'Spend by Platform',cols:['Platform','Spend','% of Budget','ROAS','Efficiency'],rows:[
+      ['Google Ads','₹1.25L','52%','3.5x',{label:'✅ Best ROI',cls:'mbadge-green'}],
+      ['Meta','₹98K','41%','2.8x',{label:'⚠ Average',cls:'mbadge-amber'}],
+      ['TikTok','₹56K','23%','3.0x',{label:'✅ Good',cls:'mbadge-green'}],
+      ['LinkedIn','₹74K','31%','2.1x',{label:'⚠ Below avg',cls:'mbadge-amber'}],
+      ['Twitter/X','₹32K','13%','1.6x',{label:'🔴 Pause now',cls:'mbadge-red'}],
+    ],bars:[{name:'Google ₹1.25L',val:'₹1.25L',pct:100,color:'#3D9CF5'},{name:'Meta ₹98K',val:'₹98K',pct:79,color:'#7B6EF6'},{name:'LinkedIn ₹74K',val:'₹74K',pct:59,color:'#F5A623'},{name:'TikTok ₹56K',val:'₹56K',pct:45,color:'#00C896'},{name:'Twitter ₹32K',val:'₹32K',pct:26,color:'#FF4D6A'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Google Ads delivering the best ROI at 3.5x ROAS</strong> with ₹1.25L spend — highest return per rupee spent across all platforms.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>At current burn rate, budget will be exhausted before month end.</strong> 78% spent with significant days remaining — risk of campaign pausing.'},
+      {type:'action',tag:'💡 Action',text:'<strong>Pause Twitter/X (₹32K, 1.6x ROAS) immediately.</strong> Redirect to Google/TikTok. Estimated +₹35K revenue from reallocation.'},
+    ]
+  }
+};
+
+/* ══ MODAL ENGINE ══ */
+let activeModalChart=null, modalPeriod='30d';
+
+function openDrillDown(id){
+  const d=DRILL[id];
+  if(!d)return;
+  modalPeriod=currentPeriod;
+  const overlay=document.getElementById('drill-overlay');
+  const modal=document.getElementById('drill-modal');
+  const periods=[{k:'today',l:'Today'},{k:'7d',l:'7D'},{k:'30d',l:'30D'},{k:'mtd',l:'MTD'},{k:'ytd',l:'YTD'}];
+  const pbHtml=periods.map(p=>`<button class="mpb ${p.k===modalPeriod?'active':''}" onclick="setModalPeriod('${p.k}','${id}',this)">${p.l}</button>`).join('');
+  const statsHtml=d.stats.map(s=>`
+    <div class="mstat">
+      <div class="mstat-label">${s.label}</div>
+      <div class="mstat-value" style="${s.color?'color:'+s.color:''}">${s.value}</div>
+      <div class="mstat-sub">${s.sub}</div>
+    </div>`).join('');
+  const bk=d.breakdown;
+  const tableHtml=`<table class="modal-table">
+    <thead><tr>${bk.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${bk.rows.map(r=>`<tr>${r.map(cell=>{
+      if(typeof cell==='object')return `<td><span class="mbadge ${cell.cls}">${cell.label}</span></td>`;
+      return `<td>${cell}</td>`;
+    }).join('')}</tr>`).join('')}</tbody>
+  </table>`;
+  const barsHtml=`<div class="progress-row">${bk.bars.map(b=>`
+    <div class="prog-item">
+      <div class="prog-top"><span class="prog-name">${b.name}</span><span class="prog-val">${b.val}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${b.pct}%;background:${b.color}"></div></div>
+    </div>`).join('')}</div>`;
+  const insightHtml=d.insights.map(i=>`
+    <div class="modal-iitem">
+      <div class="modal-itag ${i.type==='win'?'tag-win':i.type==='risk'?'tag-risk':'tag-action'}">${i.tag}</div>
+      <div class="modal-itext">${i.text}</div>
+    </div>`).join('');
+
+  modal.innerHTML=`
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <div class="modal-metric-icon" style="background:${d.iconBg}">${d.icon}</div>
+        <div>
+          <div class="modal-metric-name">${d.name}</div>
+          <div class="modal-metric-sub">Drill-down view · click a period to update</div>
+        </div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-period-row">
+      <div class="modal-period-picker">${pbHtml}</div>
+      <span style="font-size:11px;color:var(--text-3)">Period affects card values only</span>
+    </div>
+    <div class="modal-stats">${statsHtml}</div>
+    <div class="modal-divider"></div>
+    <div class="modal-chart-section">
+      <div class="modal-chart-title">${d.chartTitle}</div>
+      <div class="modal-chart-sub">${d.chartSub}</div>
+      <div class="modal-chart-wrap"><canvas id="modal-chart"></canvas></div>
+      <div class="chart-legend" style="margin-top:10px">
+        ${d.chartData.datasets.map(ds=>`<div class="cl-item"><span class="cl-line" style="background:${ds.borderColor||ds.backgroundColor}"></span>${ds.label}</div>`).join('')}
+      </div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-two-col">
+      <div class="modal-col-card">
+        <div class="modal-col-title">${bk.title}</div>
+        ${tableHtml}
+      </div>
+      <div class="modal-col-card">
+        <div class="modal-col-title">Visual Breakdown</div>
+        ${barsHtml}
+      </div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-insight">
+      <div class="modal-insight-hdr"><div class="modal-insight-badge">🧠 AI Insight</div><span style="font-size:10px;color:var(--text-3)">Based on ${d.name} data</span></div>
+      <div class="modal-insight-grid">${insightHtml}</div>
+    </div>`;
+
+  overlay.classList.add('open');
+  document.body.style.overflow='hidden';
+
+  requestAnimationFrame(()=>{
+    if(activeModalChart)activeModalChart.destroy();
+    const ctx=document.getElementById('modal-chart');
+    if(!ctx)return;
+    const extraScaleOpts=d.chartOpts?.scales||{};
+    activeModalChart=new Chart(ctx,{
+      type:d.chartType,
+      data:d.chartData,
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...tip}},
+        scales:{
+          y:{grid:{color:gc},ticks:{color:tc,font:{size:10},...(extraScaleOpts.y?.ticks||{})},border:{display:false},...(extraScaleOpts.y||{})},
+          x:{grid:{color:gc},ticks:{color:tc,font:{size:10}},border:{display:false},...(extraScaleOpts.x||{})},
+          ...(extraScaleOpts.y2?{y2:{...extraScaleOpts.y2,grid:{display:false},ticks:{color:tc,font:{size:10},...(extraScaleOpts.y2?.ticks||{})},border:{display:false}}}:{}),
+        }
+      }
+    });
+  });
+}
+
+function setModalPeriod(p,id,btn){
+  modalPeriod=p;
+  btn.closest('.modal-period-picker').querySelectorAll('.mpb').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const d=DRILL[id];
+  const periodCard=PERIODS[p]?.cards[id];
+  if(periodCard && d.stats[0]){
+    const statEls=document.querySelectorAll('.mstat');
+    if(statEls[0]) statEls[0].querySelector('.mstat-value').textContent=periodCard.value;
+    if(statEls[1]) statEls[1].querySelector('.mstat-sub').textContent=periodCard.vs;
+  }
+}
+
+function closeModal(e){
+  if(e && e.target!==document.getElementById('drill-overlay'))return;
+  document.getElementById('drill-overlay').classList.remove('open');
+  document.body.style.overflow='';
+  if(activeModalChart){activeModalChart.destroy();activeModalChart=null;}
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+renderCards();
+updateRevChart();
+</script>
+</body>
+</html>

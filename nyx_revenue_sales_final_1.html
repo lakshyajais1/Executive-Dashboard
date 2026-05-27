@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>nyx.today — Revenue & Sales</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#090812;--bg-card:#100E1F;--bg-elevated:#161328;--bg-header:#1A1730;
+  --border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,0.13);
+  --text:#F0EEF8;--text-2:#8B87A8;--text-3:#5A566E;
+  --green:#00C896;--green-dim:rgba(0,200,150,0.12);
+  --red:#FF4D6A;--red-dim:rgba(255,77,106,0.1);
+  --amber:#F5A623;--amber-dim:rgba(245,166,35,0.1);
+  --purple:#7B6EF6;--purple-dim:rgba(123,110,246,0.1);
+  --blue:#3D9CF5;--blue-dim:rgba(61,156,245,0.1);
+  --r:10px;--r-sm:6px;--r-lg:14px;
+}
+body{
+  background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);
+  min-height:100vh;padding:24px;
+  background-image:
+    radial-gradient(ellipse 70% 40% at 20% -5%,rgba(0,200,150,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 30% at 80% 10%,rgba(123,110,246,0.07) 0%,transparent 60%);
+}
+button,select{font-family:'DM Sans',sans-serif;cursor:pointer;border:none;outline:none}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#7B6EF6,#00C896);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+.brand-name{font-size:17px;font-weight:700;letter-spacing:-0.3px}
+.brand-sub{font-size:11px;color:var(--text-2);margin-top:1px}
+.tab-nav{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);padding:4px;gap:2px}
+.tab-btn{padding:7px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s;white-space:nowrap}
+.tab-btn.active{background:var(--green);color:#fff;box-shadow:0 2px 14px rgba(0,200,150,0.35)}
+.tab-btn:hover:not(.active){color:var(--text)}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;padding:5px 12px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
+/* ── PERIOD PICKER ── */
+.period-row{display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+.period-picker{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);padding:4px;gap:2px}
+.period-btn{padding:7px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s;white-space:nowrap}
+.period-btn.active{background:var(--green);color:#fff;box-shadow:0 2px 12px rgba(0,200,150,0.35)}
+.period-btn:hover:not(.active){color:var(--text)}
+.period-badge{font-size:11px;color:var(--text-2);background:var(--bg-elevated);border:1px solid var(--border);border-radius:20px;padding:4px 12px}
+.period-badge span{color:var(--green);font-weight:600}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.sec-hdr-left{display:flex;align-items:center;gap:8px}
+.sec-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.sec-label{font-size:13px;font-weight:600;color:var(--text)}
+.sec-sub{font-size:11px;color:var(--text-3)}
+.sec-hint{font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:4px}
+
+/* ── KPI GRID ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+
+.kpi-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:16px 17px;position:relative;overflow:hidden;
+  cursor:pointer;transition:all 0.2s;
+}
+.kpi-card::after{
+  content:'';position:absolute;inset:0;border-radius:var(--r-lg);
+  background:linear-gradient(135deg,rgba(255,255,255,0.02),transparent);
+  pointer-events:none;
+}
+.kpi-card:hover{transform:translateY(-2px);border-color:var(--border-bright);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--r-lg) var(--r-lg) 0 0;opacity:0;transition:opacity 0.2s}
+.kpi-card:hover::before{opacity:1}
+.kpi-card.up::before{background:linear-gradient(90deg,var(--green),transparent)}
+.kpi-card.warn::before{background:linear-gradient(90deg,var(--amber),transparent)}
+.kpi-card.down::before{background:linear-gradient(90deg,var(--red),transparent)}
+
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:11px}
+.kpi-label{font-size:10px;color:var(--text-2);font-weight:500;line-height:1.4;max-width:80px}
+.kpi-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.kpi-value{font-size:21px;font-weight:700;letter-spacing:-0.5px;line-height:1;margin-bottom:6px}
+.kpi-delta{font-size:11px;font-weight:500;margin-bottom:2px}
+.kpi-vs{font-size:9px;color:var(--text-3)}
+.delta-up{color:var(--green)}.delta-warn{color:var(--amber)}.delta-down{color:var(--red)}
+.drill-hint{position:absolute;bottom:9px;right:11px;font-size:9px;color:var(--text-3);opacity:0;transition:opacity 0.2s}
+.kpi-card:hover .drill-hint{opacity:1}
+
+/* ── CHARTS ROW ── */
+.charts-row{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;margin-bottom:20px}
+@media(max-width:900px){.charts-row{grid-template-columns:1fr}}
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px;transition:border-color 0.2s}
+.chart-card:hover{border-color:var(--border-bright)}
+.chart-hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.chart-title{font-size:13px;font-weight:600;color:var(--text)}
+.chart-sub{font-size:10px;color:var(--text-2);margin-top:3px}
+.chart-ctrl{display:flex;gap:6px;align-items:center}
+.ctrl-sel{padding:5px 10px;border-radius:var(--r-sm);font-size:11px;background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-2);transition:border-color 0.15s}
+.ctrl-sel:hover{border-color:var(--border-bright)}
+.chart-legend{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
+.cl-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-2)}
+.cl-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+.chart-note{font-size:10px;color:var(--text-3);margin-top:8px}
+
+/* ── CHANNEL BARS ── */
+.channel-list{display:flex;flex-direction:column;gap:12px}
+.ch-item{}
+.ch-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.ch-name{font-size:12px;font-weight:500;display:flex;align-items:center;gap:6px}
+.ch-badge{font-size:9px;padding:2px 7px;border-radius:20px;font-weight:600}
+.ch-val{font-size:11px;color:var(--text-2);font-family:'DM Mono',monospace}
+.ch-track{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.ch-fill{height:100%;border-radius:3px;transition:width 0.7s ease}
+.ch-meta{display:flex;justify-content:space-between;margin-top:3px;font-size:9px;color:var(--text-3)}
+
+/* ══════════════════════════════════════
+   D2C FUNNEL SECTION
+══════════════════════════════════════ */
+.funnel-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;margin-bottom:20px}
+.funnel-section-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.funnel-title{font-size:14px;font-weight:700;color:var(--text)}
+.funnel-sub{font-size:11px;color:var(--text-2);margin-top:3px}
+.funnel-period-tag{font-size:10px;color:var(--green);background:var(--green-dim);border:1px solid rgba(0,200,150,0.2);border-radius:20px;padding:3px 10px;white-space:nowrap}
+
+/* Stage cards — screenshot style */
+.funnel-stages{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:16px}
+.stage-box{
+  background:#0D0B1E;border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px;padding:16px 14px;text-align:left;
+  transition:all 0.2s;cursor:default;position:relative;overflow:hidden;
+}
+.stage-box:hover{border-color:rgba(255,255,255,0.22);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.5)}
+.stage-name{font-size:10px;font-weight:500;color:rgba(255,255,255,0.45);margin-bottom:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:0.02em}
+.stage-value{font-size:24px;font-weight:800;letter-spacing:-0.8px;color:#fff;margin-bottom:6px;line-height:1}
+.stage-label{font-size:10px;font-weight:600;display:flex;align-items:center;gap:3px}
+
+/* Stream funnel canvas wrapper */
+.funnel-stream-wrap{
+  background:#0C0A1A;border:1px solid rgba(255,255,255,0.08);
+  border-radius:var(--r-lg);padding:0;margin-bottom:16px;
+  overflow:hidden;position:relative;
+}
+.funnel-stream-canvas-row{position:relative;width:100%}
+#funnelStreamCanvas{display:block;width:100%}
+.funnel-tooltip{
+  position:absolute;pointer-events:none;
+  background:#1C1838;border:1px solid rgba(168,139,248,0.5);
+  border-radius:10px;padding:12px 16px;min-width:160px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.7);opacity:0;
+  transition:opacity 0.12s;z-index:10;
+}
+.ft-name{font-size:12px;font-weight:700;color:#fff;margin-bottom:8px}
+.ft-row{display:flex;justify-content:space-between;gap:18px;font-size:10px;margin-bottom:3px}
+.ft-label{color:rgba(255,255,255,0.4)}.ft-val{color:#fff;font-weight:700;font-family:'DM Mono',monospace}
+
+/* Funnel summary row */
+.funnel-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px}
+.fsumm-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;text-align:center}
+.fsumm-label{font-size:10px;color:var(--text-2);margin-bottom:5px;font-weight:500}
+.fsumm-value{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.fsumm-sub{font-size:10px;color:var(--text-3);margin-top:3px}
+
+/* Drop-off detail table */
+.dropoff-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:16px}
+.dropoff-table th{padding:8px 12px;font-size:10px;color:var(--purple);text-align:left;font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.04em;background:rgba(255,255,255,0.01)}
+.dropoff-table td{padding:10px 12px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle}
+.dropoff-table tr:last-child td{border-bottom:none}
+.dropoff-table tr:hover td{background:rgba(255,255,255,0.015)}
+.status-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600}
+.pill-green{background:rgba(0,200,150,0.12);color:var(--green)}
+.pill-amber{background:rgba(245,166,35,0.12);color:var(--amber)}
+.pill-red{background:rgba(255,77,106,0.12);color:var(--red)}
+
+/* ── INSIGHT PANEL ── */
+.insight-panel{background:linear-gradient(135deg,rgba(0,200,150,0.06),rgba(123,110,246,0.04));border:1px solid rgba(0,200,150,0.18);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:20px}
+.insight-hdr{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.insight-badge{font-size:10px;font-weight:700;color:var(--green);background:rgba(0,200,150,0.1);border:1px solid rgba(0,200,150,0.2);border-radius:20px;padding:3px 10px;text-transform:uppercase;letter-spacing:0.04em}
+.insight-ts{font-size:10px;color:var(--text-3)}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:700px){.insight-grid{grid-template-columns:1fr}}
+.insight-item{background:rgba(0,0,0,0.2);border-radius:var(--r-sm);padding:12px 14px;border:1px solid rgba(255,255,255,0.04)}
+.itag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:5px}
+.itag-win{color:var(--green)}.itag-risk{color:var(--red)}.itag-action{color:var(--amber)}
+.itext{font-size:11px;color:var(--text-2);line-height:1.65}
+.itext strong{color:var(--text);font-weight:600}
+
+/* ── FOOTER ── */
+.dash-footer{display:flex;gap:18px;padding:12px 18px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-lg);flex-wrap:wrap}
+.df-item{font-size:11px;color:var(--text-2)}.df-item span{color:var(--text);font-weight:600}
+.df-div{width:1px;background:var(--border);flex-shrink:0}
+
+/* ── MODAL OVERLAY ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,4,15,0.85);backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:#12102A;border:1px solid rgba(255,255,255,0.1);border-radius:18px;width:100%;max-width:860px;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 40px 100px rgba(0,0,0,0.7);animation:modalIn 0.25s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-hdr{padding:20px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.modal-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.modal-name{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.modal-sub{font-size:11px;color:var(--text-2);margin-top:2px}
+.modal-close{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--text-2);font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.modal-close:hover{background:rgba(255,77,106,0.15);color:var(--red);border-color:var(--red)}
+.modal-period-row{display:flex;align-items:center;gap:8px;padding:14px 24px;flex-wrap:wrap}
+.mpicker{display:flex;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:3px;gap:2px}
+.mpb{padding:5px 11px;border-radius:5px;font-size:11px;font-weight:500;color:var(--text-2);background:transparent;transition:all 0.15s}
+.mpb.active{background:var(--green);color:#fff}
+.mpb:hover:not(.active){color:var(--text)}
+.modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 24px 16px}
+.mstat{background:var(--bg-elevated);border:1px solid var(--border);border-radius:11px;padding:14px 16px}
+.mstat-lbl{font-size:10px;color:var(--text-2);margin-bottom:5px;font-weight:500}
+.mstat-val{font-size:20px;font-weight:700;letter-spacing:-0.4px;margin-bottom:3px}
+.mstat-sub{font-size:10px;color:var(--text-3)}
+.modal-chart-sec{padding:0 24px 16px}
+.modal-chart-title{font-size:12px;font-weight:600;margin-bottom:3px}
+.modal-chart-sub{font-size:10px;color:var(--text-2);margin-bottom:12px}
+.modal-chart-wrap{position:relative;height:200px}
+.modal-divider{height:1px;background:var(--border);margin:0 24px 16px}
+.modal-two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 24px 16px}
+@media(max-width:680px){.modal-two-col{grid-template-columns:1fr}.modal-stats{grid-template-columns:1fr 1fr}}
+.modal-col-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:11px;padding:14px 16px}
+.modal-col-title{font-size:10px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px}
+.modal-table{width:100%;border-collapse:collapse;font-size:12px}
+.modal-table th{padding:7px 10px;font-size:10px;color:var(--purple);font-weight:600;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.04em;text-align:left}
+.modal-table td{padding:9px 10px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.03)}
+.modal-table tr:last-child td{border-bottom:none}
+.modal-table tr:hover td{background:rgba(255,255,255,0.02)}
+.prog-row{display:flex;flex-direction:column;gap:10px}
+.prog-item .prog-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.prog-name{color:var(--text);font-weight:500}.prog-val{color:var(--text-2);font-family:'DM Mono',monospace;font-size:10px}
+.prog-track{height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px}
+.mbadge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.mbadge-green{background:rgba(0,200,150,0.15);color:var(--green)}
+.mbadge-red{background:rgba(255,77,106,0.15);color:var(--red)}
+.mbadge-amber{background:rgba(245,166,35,0.15);color:var(--amber)}
+.mbadge-blue{background:rgba(61,156,245,0.15);color:var(--blue)}
+.modal-insight{margin:0 24px 20px;background:linear-gradient(135deg,rgba(0,200,150,0.07),rgba(123,110,246,0.04));border:1px solid rgba(0,200,150,0.18);border-radius:11px;padding:14px 16px}
+.modal-insight-hdr{display:flex;align-items:center;gap:7px;margin-bottom:10px}
+.modal-insight-badge{font-size:10px;font-weight:700;color:var(--green);background:rgba(0,200,150,0.1);border:1px solid rgba(0,200,150,0.2);border-radius:20px;padding:2px 9px;text-transform:uppercase;letter-spacing:0.04em}
+.modal-insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+@media(max-width:680px){.modal-insight-grid{grid-template-columns:1fr}}
+.modal-iitem{background:rgba(0,0,0,0.25);border-radius:8px;padding:10px 12px;border:1px solid rgba(255,255,255,0.04)}
+.modal-itag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+.modal-itext{font-size:11px;color:var(--text-2);line-height:1.6}
+.modal-itext strong{color:var(--text)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.kpi-card{animation:fadeUp 0.4s ease both}
+.kpi-card:nth-child(1){animation-delay:.05s}.kpi-card:nth-child(2){animation-delay:.10s}
+.kpi-card:nth-child(3){animation-delay:.15s}.kpi-card:nth-child(4){animation-delay:.20s}
+.kpi-card:nth-child(5){animation-delay:.25s}.kpi-card:nth-child(6){animation-delay:.30s}
+.funnel-section{animation:fadeUp 0.5s ease 0.3s both}
+</style>
+</head>
+<body>
+
+<!-- ═══ MODAL ═════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="drill-overlay" onclick="closeModal(event)">
+  <div class="modal" id="drill-modal"></div>
+</div>
+
+<!-- ═══ TOPBAR ════════════════════════════════════════════════════ -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">nx</div>
+    <div>
+      <div class="brand-name">nyx.today</div>
+      <div class="brand-sub">Revenue & Sales — Tab 2</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div class="tab-nav">
+      <button class="tab-btn" onclick="window.location='nyx_exec_drilldown.html'">🎯 Executive</button>
+      <button class="tab-btn active">📦 Revenue & Sales</button>
+      <button class="tab-btn" style="opacity:0.4;cursor:not-allowed">📣 Marketing</button>
+      <button class="tab-btn" style="opacity:0.4;cursor:not-allowed">👥 Engagement</button>
+    </div>
+    <div class="live-pill"><div class="live-dot"></div>Live · 2 min ago</div>
+  </div>
+</div>
+
+<!-- ═══ PERIOD PICKER ════════════════════════════════════════════ -->
+<div class="period-row">
+  <div class="period-picker">
+    <button class="period-btn" onclick="setPeriod('today',this)">Today</button>
+    <button class="period-btn" onclick="setPeriod('7d',this)">7 Days</button>
+    <button class="period-btn active" onclick="setPeriod('30d',this)">30 Days</button>
+    <button class="period-btn" onclick="setPeriod('mtd',this)">MTD</button>
+    <button class="period-btn" onclick="setPeriod('ytd',this)">YTD</button>
+  </div>
+  <div class="period-badge">Viewing: <span id="period-label">Last 30 Days</span></div>
+</div>
+
+<!-- ═══ KPI CARDS ════════════════════════════════════════════════ -->
+<div class="sec-hdr">
+  <div class="sec-hdr-left">
+    <div class="sec-dot" style="background:var(--green)"></div>
+    <div>
+      <div class="sec-label">Revenue & Sales KPIs</div>
+    </div>
+  </div>
+  <div class="sec-hint">🔍 Click any card to drill down</div>
+</div>
+<div class="kpi-grid" id="kpi-grid"></div>
+
+<!-- ═══ CHARTS ROW ═══════════════════════════════════════════════ -->
+<div class="charts-row">
+
+  <!-- Weekly Revenue Trend -->
+  <div class="chart-card">
+    <div class="chart-hdr">
+      <div>
+        <div class="chart-title">Weekly Revenue Trend</div>
+        <div class="chart-sub">Week-by-week breakdown · this tab shows weekly, Tab 1 shows monthly</div>
+      </div>
+      <div class="chart-ctrl">
+        <div class="chart-legend" style="margin:0">
+          <div class="cl-item"><span class="cl-dot" style="background:var(--green)"></span>Revenue</div>
+          <div class="cl-item"><span class="cl-dot" style="background:var(--purple)"></span>Orders</div>
+        </div>
+        <select class="ctrl-sel" id="revChartSel" onchange="updateRevChart()">
+          <option value="weekly">Weekly</option>
+          <option value="daily">Daily</option>
+        </select>
+      </div>
+    </div>
+    <div style="position:relative;height:200px"><canvas id="revChart"></canvas></div>
+    <div class="chart-note">📌 Orders axis on right · Revenue axis on left</div>
+  </div>
+
+  <!-- Revenue by Channel -->
+  <div class="chart-card">
+    <div class="chart-hdr">
+      <div>
+        <div class="chart-title">Revenue by Channel</div>
+        <div class="chart-sub">Where revenue is coming from this period</div>
+      </div>
+    </div>
+    <div class="channel-list" style="margin-top:4px">
+      <div class="ch-item">
+        <div class="ch-top">
+          <span class="ch-name" style="color:var(--green)">
+            Paid
+            <span class="ch-badge" style="background:rgba(0,200,150,0.12);color:var(--green)">★ Top</span>
+          </span>
+          <span class="ch-val">₹760K · 43%</span>
+        </div>
+        <div class="ch-track"><div class="ch-fill" style="width:100%;background:var(--green)"></div></div>
+        <div class="ch-meta"><span>↑ +12% vs last period</span><span>ROAS 3.6x</span></div>
+      </div>
+      <div class="ch-item">
+        <div class="ch-top">
+          <span class="ch-name">Organic</span>
+          <span class="ch-val">₹420K · 24%</span>
+        </div>
+        <div class="ch-track"><div class="ch-fill" style="width:56%;background:var(--purple)"></div></div>
+        <div class="ch-meta"><span>↑ +8% vs last period</span><span>0 ad spend</span></div>
+      </div>
+      <div class="ch-item">
+        <div class="ch-top">
+          <span class="ch-name">Direct</span>
+          <span class="ch-val">₹360K · 20%</span>
+        </div>
+        <div class="ch-track"><div class="ch-fill" style="width:47%;background:var(--blue)"></div></div>
+        <div class="ch-meta"><span>↑ +5% vs last period</span><span>Returning buyers</span></div>
+      </div>
+      <div class="ch-item">
+        <div class="ch-top">
+          <span class="ch-name">Social</span>
+          <span class="ch-val">₹135K · 8%</span>
+        </div>
+        <div class="ch-track"><div class="ch-fill" style="width:18%;background:var(--amber)"></div></div>
+        <div class="ch-meta"><span style="color:var(--red)">↓ −3% vs last period</span><span>Creative fatigue</span></div>
+      </div>
+      <div class="ch-item">
+        <div class="ch-top">
+          <span class="ch-name">Referral</span>
+          <span class="ch-val">₹88K · 5%</span>
+        </div>
+        <div class="ch-track"><div class="ch-fill" style="width:12%;background:var(--text-3)"></div></div>
+        <div class="ch-meta"><span>↑ +2% vs last period</span><span>Word of mouth</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ D2C SALES FUNNEL ══════════════════════════════════════════ -->
+<div class="funnel-section">
+
+  <div class="funnel-section-hdr">
+    <div>
+      <div class="funnel-title">🛒 D2C Sales Funnel — Full Conversion Journey</div>
+      <div class="funnel-sub">Every stage from first visit to successful purchase · hover the chart to explore each stage</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div class="funnel-period-tag" id="funnel-period-tag">Last 30 Days</div>
+      <select class="ctrl-sel" id="funnelView" onchange="renderFunnel()">
+        <option value="volume">Volume View</option>
+        <option value="rate">Rate View</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stage Cards + Stream Canvas — one connected component -->
+  <div style="background:var(--bg-card);border:1px solid var(--border-bright);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px">
+
+    <!-- Stage Cards (top row) -->
+    <div class="funnel-stages" id="funnel-stages"></div>
+
+    <!-- Stream Funnel Canvas (directly below cards, no gap) -->
+    <div class="funnel-stream-canvas-row" style="background:#0D0B1E;position:relative">
+      <canvas id="funnelStreamCanvas" height="260"></canvas>
+      <div class="funnel-tooltip" id="funnelTooltip">
+        <div class="ft-name" id="ft-name">—</div>
+        <div class="ft-row"><span class="ft-label">Volume</span><span class="ft-val" id="ft-vol">—</span></div>
+        <div class="ft-row"><span class="ft-label">% of Traffic</span><span class="ft-val" id="ft-pct">—</span></div>
+        <div class="ft-row"><span class="ft-label">Drop-off</span><span class="ft-val" id="ft-drop">—</span></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 20px 14px;background:#0C0A1A;border-top:1px solid rgba(255,255,255,0.07)">
+      <div style="font-size:10px;color:rgba(255,255,255,0.35)">💡 Hover any section to see drop-off details</div>
+      <div style="display:flex;gap:20px;font-size:10px;color:rgba(255,255,255,0.35)">
+        <span>Overall: <strong style="color:var(--amber)">2.8%</strong> conversion</span>
+        <span>Biggest drop: <strong style="color:var(--red)">Checkout 69.8%</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary stats -->
+  <div class="funnel-summary">
+    <div class="fsumm-card">
+      <div class="fsumm-label">Overall Funnel Conversion</div>
+      <div class="fsumm-value" style="color:var(--amber)">2.8%</div>
+      <div class="fsumm-sub">Traffic → Successful Purchase</div>
+    </div>
+    <div class="fsumm-card">
+      <div class="fsumm-label">Biggest Drop-off Stage</div>
+      <div class="fsumm-value" style="color:var(--red)">Checkout → Purchase</div>
+      <div class="fsumm-sub">69.8% of users abandon here</div>
+    </div>
+    <div class="fsumm-card">
+      <div class="fsumm-label">Revenue Opportunity</div>
+      <div class="fsumm-value" style="color:var(--green)">+₹4.2L</div>
+      <div class="fsumm-sub">If checkout conv improves by 10%</div>
+    </div>
+  </div>
+
+  <!-- Drop-off detail table -->
+  <div style="margin-top:20px">
+    <div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Stage-by-Stage Drop-off Analysis</div>
+    <table class="dropoff-table">
+      <thead>
+        <tr>
+          <th>Stage Transition</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Conversion %</th>
+          <th>Drop-off %</th>
+          <th>Users Lost</th>
+          <th>Status</th>
+          <th>Opportunity</th>
+        </tr>
+      </thead>
+      <tbody id="funnel-table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ INSIGHT PANEL ════════════════════════════════════════════ -->
+<div class="insight-panel">
+  <div class="insight-hdr">
+    <div class="insight-badge">🧠 Revenue & Sales Insights</div>
+    <div class="insight-ts">Auto-generated · Last 30 days · <span id="insight-period-label">Last 30 Days</span></div>
+  </div>
+  <div class="insight-grid">
+    <div class="insight-item">
+      <div class="itag itag-win">✅ Win</div>
+      <div class="itext"><strong>AOV grew ₹28 (+8.8%) this period</strong> to ₹346. Combined with 15.7% new customer growth, this is driving total revenue acceleration. Subscription mix is the key lever — subscribers have 2.3x higher AOV.</div>
+    </div>
+    <div class="insight-item">
+      <div class="itag itag-risk">⚠ Risk</div>
+      <div class="itext"><strong>Checkout drop-off at 69.8% is critically high.</strong> Only 12,080 of 40,020 users who started checkout actually completed it. At current AOV of ₹346, this lost checkout volume = ₹9.7L in unrealized revenue per month.</div>
+    </div>
+    <div class="insight-item">
+      <div class="itag itag-action">💡 Action</div>
+      <div class="itext"><strong>Fix mobile checkout first.</strong> 58% of checkout initiations are on mobile, but mobile conversion is 1.9% vs desktop 3.5%. Implementing a one-click checkout for returning customers could add <strong>+₹4.2L/month</strong>.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FOOTER ═══════════════════════════════════════════════════ -->
+<div class="dash-footer">
+  <div class="df-item">Tab: <span>Revenue & Sales</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Period: <span id="footer-period">Last 30 Days</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">KPI Cards: <span>5</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Funnel Stages: <span>6</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Biggest Issue: <span style="color:var(--red)">Checkout drop-off 69.8%</span></div>
+  <div class="df-div"></div>
+  <div class="df-item">Revenue Opportunity: <span style="color:var(--green)">+₹4.2L/month</span></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   SHARED
+══════════════════════════════════════════════════ */
+const gc='rgba(255,255,255,0.04)',tc='#8B87A8';
+const tip={backgroundColor:'#1A1730',titleColor:'#F0EEF8',bodyColor:'#8B87A8',borderColor:'rgba(0,200,150,0.2)',borderWidth:1,padding:10,cornerRadius:8};
+
+/* ══════════════════════════════════════════════════
+   KPI DATA
+══════════════════════════════════════════════════ */
+const PERIODS={
+  today:{label:'Today',cards:{
+    'units-sold':{value:'4,820',delta:'↑ +6.2%',dir:'up',vs:'vs yesterday'},
+    'aov':{value:'₹346',delta:'↑ +₹8',dir:'up',vs:'vs yesterday'},
+    'total-orders':{value:'4,820',delta:'↑ +6.2%',dir:'up',vs:'vs yesterday'},
+    'subscribers':{value:'12,340',delta:'↑ +84',dir:'up',vs:'new today'},
+    'repeat-rate':{value:'34.2%',delta:'↑ +1.1%',dir:'up',vs:'vs yesterday'},
+    'rev-per-sub':{value:'₹182',delta:'↑ +₹4',dir:'up',vs:'vs yesterday'},
+  }},
+  '7d':{label:'Last 7 Days',cards:{
+    'units-sold':{value:'31,480',delta:'↑ +9.3%',dir:'up',vs:'vs prev 7 days'},
+    'aov':{value:'₹338',delta:'↑ +₹22',dir:'up',vs:'vs prev 7 days'},
+    'total-orders':{value:'31,480',delta:'↑ +9.3%',dir:'up',vs:'vs prev 7 days'},
+    'subscribers':{value:'12,340',delta:'↑ +520',dir:'up',vs:'new this week'},
+    'repeat-rate':{value:'33.8%',delta:'↑ +2.4%',dir:'up',vs:'vs prev week'},
+    'rev-per-sub':{value:'₹178',delta:'↑ +₹12',dir:'up',vs:'vs prev week'},
+  }},
+  '30d':{label:'Last 30 Days',cards:{
+    'units-sold':{value:'1.24L',delta:'↑ +15.7%',dir:'up',vs:'vs last month'},
+    'aov':{value:'₹346',delta:'↑ +₹28',dir:'up',vs:'↑ 8.8% vs last month'},
+    'total-orders':{value:'25,145',delta:'↑ +12.3%',dir:'up',vs:'vs last month'},
+    'subscribers':{value:'12,340',delta:'↑ +1,840',dir:'up',vs:'added this month'},
+    'repeat-rate':{value:'34.2%',delta:'↑ +3.1%',dir:'up',vs:'vs last month'},
+    'rev-per-sub':{value:'₹182',delta:'↑ +₹14',dir:'up',vs:'vs last month'},
+  }},
+  mtd:{label:'Month-to-Date',cards:{
+    'units-sold':{value:'89,200',delta:'↑ +18.1%',dir:'up',vs:'vs last MTD'},
+    'aov':{value:'₹341',delta:'↑ +₹19',dir:'up',vs:'vs last MTD'},
+    'total-orders':{value:'18,420',delta:'↑ +14.2%',dir:'up',vs:'vs last MTD'},
+    'subscribers':{value:'12,340',delta:'↑ +2,100',dir:'up',vs:'vs last MTD'},
+    'repeat-rate':{value:'33.6%',delta:'↑ +2.8%',dir:'up',vs:'vs last MTD'},
+    'rev-per-sub':{value:'₹178',delta:'↑ +₹10',dir:'up',vs:'vs last MTD'},
+  }},
+  ytd:{label:'Year-to-Date',cards:{
+    'units-sold':{value:'4.82L',delta:'↑ +24.1%',dir:'up',vs:'vs last YTD'},
+    'aov':{value:'₹328',delta:'↑ +₹42',dir:'up',vs:'vs last YTD'},
+    'total-orders':{value:'98,450',delta:'↑ +22.3%',dir:'up',vs:'vs last YTD'},
+    'subscribers':{value:'12,340',delta:'↑ +4,820',dir:'up',vs:'vs last YTD'},
+    'repeat-rate':{value:'31.8%',delta:'↑ +5.2%',dir:'up',vs:'vs last YTD'},
+    'rev-per-sub':{value:'₹168',delta:'↑ +₹28',dir:'up',vs:'vs last YTD'},
+  }}
+};
+
+const KPI_META=[
+  {id:'total-orders', label:'Total Orders',             icon:'📋', iconBg:'rgba(61,156,245,0.12)'},
+  {id:'units-sold',   label:'Units Sold',               icon:'📦', iconBg:'rgba(0,200,150,0.12)'},
+  {id:'aov',          label:'Avg Order Value',          icon:'🛒', iconBg:'rgba(123,110,246,0.12)'},
+  {id:'subscribers',  label:'Monthly Subscribers',      icon:'🔔', iconBg:'rgba(245,166,35,0.12)'},
+  {id:'rev-per-sub',  label:'Revenue per Subscriber',   icon:'💰', iconBg:'rgba(123,110,246,0.12)'},
+];
+
+let currentPeriod='30d';
+
+function renderCards(){
+  const data=PERIODS[currentPeriod].cards;
+  document.getElementById('kpi-grid').innerHTML=KPI_META.map(m=>{
+    const d=data[m.id];
+    const dc=d.dir==='up'?'up':d.dir==='down'?'down':'warn';
+    const dClass=`delta-${d.dir==='up'?'up':d.dir==='down'?'down':'warn'}`;
+    return `<div class="kpi-card ${dc}" onclick="openModal('${m.id}')">
+      <div class="kpi-top">
+        <div class="kpi-label">${m.label}</div>
+        <div class="kpi-icon" style="background:${m.iconBg}">${m.icon}</div>
+      </div>
+      <div class="kpi-value">${d.value}</div>
+      <div class="kpi-delta ${dClass}">${d.delta}</div>
+      <div class="kpi-vs">${d.vs}</div>
+      <div class="drill-hint">🔍 Drill down</div>
+    </div>`;
+  }).join('');
+}
+
+function setPeriod(p,btn){
+  currentPeriod=p;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const label=PERIODS[p].label;
+  document.getElementById('period-label').textContent=label;
+  document.getElementById('footer-period').textContent=label;
+  document.getElementById('funnel-period-tag').textContent=label;
+  document.getElementById('insight-period-label').textContent=label;
+  renderCards();
+  updateRevChart();
+}
+
+/* ══════════════════════════════════════════════════
+   WEEKLY REVENUE CHART
+══════════════════════════════════════════════════ */
+const REV_CHART_DATA={
+  weekly:{
+    labels:['Wk 1','Wk 2','Wk 3','Wk 4'],
+    revenue:[19200000,21050000,22800000,24500000],
+    orders:[5840,6320,6580,6405]
+  },
+  daily:{
+    labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    revenue:[2800000,3100000,2950000,3400000,3200000,4100000,3850000],
+    orders:[808,894,851,981,923,1183,1111]
+  }
+};
+let revChartInst=null;
+function updateRevChart(){
+  const sel=document.getElementById('revChartSel').value;
+  const d=REV_CHART_DATA[sel];
+  if(revChartInst)revChartInst.destroy();
+  revChartInst=new Chart(document.getElementById('revChart'),{
+    type:'bar',
+    data:{labels:d.labels,datasets:[
+      {label:'Revenue',data:d.revenue,backgroundColor:'rgba(0,200,150,0.7)',borderRadius:6,borderSkipped:false,yAxisID:'yRev'},
+      {label:'Orders',data:d.orders,type:'line',borderColor:'#7B6EF6',backgroundColor:'transparent',tension:0.4,pointRadius:4,pointBackgroundColor:'#7B6EF6',yAxisID:'yOrders'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:c=>c.dataset.yAxisID==='yRev'?`Revenue: ₹${(c.parsed.y/1e6).toFixed(2)}M`:`Orders: ${c.parsed.y.toLocaleString()}`}}},
+      scales:{
+        yRev:{position:'left',grid:{color:gc},ticks:{color:'#00C896',font:{size:10},callback:v=>'₹'+(v/1e6).toFixed(1)+'M'},border:{display:false}},
+        yOrders:{position:'right',grid:{display:false},ticks:{color:'#7B6EF6',font:{size:10},callback:v=>v>=1000?(v/1000).toFixed(1)+'K':v},border:{display:false}},
+        x:{grid:{display:false},ticks:{color:tc,font:{size:10}},border:{display:false}}
+      }
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════
+   D2C FUNNEL DATA
+══════════════════════════════════════════════════ */
+const FUNNEL_STAGES=[
+  {id:'traffic',    num:1,icon:'🌐',name:'Traffic\n(Sessions)',       value:1500000, label:'1.5M sessions',  color:'#7B6EF6'},
+  {id:'login',      num:2,icon:'👤',name:'Login /\nRegister',         value:284000,  label:'284K users',     color:'#5E8CF4'},
+  {id:'pdp',        num:3,icon:'👁️', name:'Product\nView (PDP)',      value:186000,  label:'186K views',     color:'#3D9CF5'},
+  {id:'cart',       num:4,icon:'🛒',name:'Add to\nCart',              value:39560,   label:'39.56K users',   color:'#00C896'},
+  {id:'checkout',   num:5,icon:'💳',name:'Initiate\nCheckout',        value:40020,   label:'40.02K users',   color:'#F5A623'},
+  {id:'purchase',   num:6,icon:'✅',name:'Successful\nPurchase',      value:12080,   label:'12.08K orders',  color:'#00E5A8'},
+];
+
+const FUNNEL_DROPS=[
+  {from:'Traffic',        to:'Login / Register',    fromVal:1500000, toVal:284000,  conv:18.9, drop:81.1, status:'warn',  opp:'Improve landing page & onboarding to reduce anonymous bounce'},
+  {from:'Login/Register', to:'Product View',        fromVal:284000,  toVal:186000,  conv:65.5, drop:34.5, status:'ok',    opp:'Good browse-to-PDP rate. Improve search & recommendations'},
+  {from:'Product View',   to:'Add to Cart',         fromVal:186000,  toVal:39560,   conv:21.3, drop:78.7, status:'bad',   opp:'Product page needs stronger CTA, better images, social proof'},
+  {from:'Add to Cart',    to:'Initiate Checkout',   fromVal:39560,   toVal:40020,   conv:101,  drop:0,    status:'ok',    opp:'Positive — more users initiate checkout than add to cart'},
+  {from:'Initiate Checkout','to':'Successful Purchase',fromVal:40020, toVal:12080,  conv:30.2, drop:69.8, status:'bad',   opp:'Critical: payment friction. One-click checkout could save ₹9.7L/month'},
+];
+
+let funnelBarInst=null; // kept for compat but unused now
+function renderFunnel(){
+  const view=document.getElementById('funnelView').value;
+  const maxVal=FUNNEL_STAGES[0].value;
+
+  /* ── Stage Cards (screenshot style: name top, big value, lift% bottom) ── */
+  const stageAccents=['#A78BF8','#8B72F0','#7B6EF6','#6A5CE8','#9B30E0','#B040FF'];
+  document.getElementById('funnel-stages').innerHTML=FUNNEL_STAGES.map((s,i)=>{
+    const pct=Math.round((s.value/maxVal)*100);
+    const prev=i>0?FUNNEL_STAGES[i-1].value:null;
+    const liftPct=prev?((s.value-prev)/prev*100):null;
+    const displayVal=view==='volume'
+      ?(s.value>=1000000?(s.value/1e6).toFixed(2)+'M':s.value>=1000?(s.value/1000).toFixed(2)+'K':s.value)
+      :pct+'%';
+    /* Sub label: "Stage 1" for first, lift% for others, % of checkout for last */
+    let subHtml='';
+    if(i===0){
+      subHtml=`<span style="color:${stageAccents[0]}">Stage 1</span>`;
+    } else {
+      const sign=liftPct>=0?'+':'';
+      const col=liftPct>=-5?'var(--green)':'var(--red)';
+      const arrow=liftPct>=0?'↑ ':'↓ ';
+      const absLift=Math.abs(liftPct).toFixed(2);
+      subHtml=`<span style="color:${col};display:flex;align-items:center;gap:3px"><span style="font-size:12px">${liftPct>=0?'↑':'↓'}</span>${sign}${absLift}% lift</span>`;
+    }
+    /* % of prev stage for non-first */
+    const prevConv=prev?Math.round(s.value/prev*1000)/10:null;
+    const prevConvLabel=prev?`<span style="color:${stageAccents[i]};font-size:9px;display:block;margin-top:4px">${prevConv}% of prev stage</span>`:'';
+    return `<div class="stage-box" onmouseenter="highlightStage(${i})" onmouseleave="highlightStage(-1)">
+      <div class="stage-name">${s.name.replace('\n',' ')}</div>
+      <div class="stage-value">${displayVal}</div>
+      <div class="stage-label">${subHtml}${prevConvLabel}</div>
+    </div>`;
+  }).join('');
+
+  /* ── Draw Stream Funnel ── */
+  drawFunnelStream(view);
+
+  /* ── Drop-off table ── */
+  document.getElementById('funnel-table-body').innerHTML=FUNNEL_DROPS.map(d=>{
+    const statusHtml=d.status==='ok'
+      ?`<span class="status-pill pill-green">✅ Good</span>`
+      :d.status==='warn'
+      ?`<span class="status-pill pill-amber">⚠ Watch</span>`
+      :`<span class="status-pill pill-red">🔴 Critical</span>`;
+    const convColor=d.status==='ok'?'var(--green)':d.status==='warn'?'var(--amber)':'var(--red)';
+    const lostUsers=d.fromVal-d.toVal;
+    return `<tr>
+      <td style="font-weight:500">${d.from} → ${d.to}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px">${d.fromVal>=1000000?(d.fromVal/1000000).toFixed(2)+'M':d.fromVal>=1000?(d.fromVal/1000).toFixed(1)+'K':d.fromVal}</td>
+      <td style="font-family:'DM Mono',monospace;font-size:11px">${d.toVal>=1000?(d.toVal/1000).toFixed(1)+'K':d.toVal}</td>
+      <td style="color:${convColor};font-weight:600">${d.conv}%</td>
+      <td style="color:var(--red);font-weight:600">${d.drop>0?d.drop+'%':'—'}</td>
+      <td style="color:var(--text-2);font-size:11px">${lostUsers>0?'−'+(lostUsers>=1000?(lostUsers/1000).toFixed(1)+'K':lostUsers):'—'}</td>
+      <td>${statusHtml}</td>
+      <td style="font-size:10px;color:var(--text-3);max-width:180px;white-space:normal;line-height:1.4">${d.opp}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══ STREAM FUNNEL CANVAS RENDERER ══ */
+let hoveredStageIdx=-1;
+
+function fmtVal(v){
+  return v>=1000000?(v/1e6).toFixed(2)+'M':v>=1000?(v/1000).toFixed(1)+'K':v;
+}
+
+function drawFunnelStream(view){
+  const canvas=document.getElementById('funnelStreamCanvas');
+  if(!canvas)return;
+  const wrap=canvas.parentElement;
+  const dpr=window.devicePixelRatio||1;
+  const W=wrap.offsetWidth||900;
+  const H=260;
+  canvas.width=W*dpr;
+  canvas.height=H*dpr;
+  canvas.style.width=W+'px';
+  canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+
+  const stages=FUNNEL_STAGES;
+  const n=stages.length;
+  const maxVal=stages[0].value;
+  const segW=W/n;
+  const padV=20;
+  const maxBandH=H-2*padV;
+
+  /* ── LOG scale so all stages are visible ── */
+  const logMax=Math.log(maxVal);
+  const heights=stages.map(s=>{
+    const logH=Math.log(Math.max(1,s.value))/logMax;
+    return Math.max(28, logH*maxBandH);
+  });
+
+  /* Boundary heights at dividers = avg of adjacent stages */
+  const bh=[heights[0]];
+  for(let i=0;i<n-1;i++) bh.push((heights[i]+heights[i+1])/2);
+  bh.push(heights[n-1]);
+
+  ctx.clearRect(0,0,W,H);
+
+  /* ── Background ── */
+  ctx.fillStyle='#0D0B1E';
+  ctx.fillRect(0,0,W,H);
+
+  /* ── Draw main stream shape ── */
+  ctx.beginPath();
+  ctx.moveTo(0,(H-bh[0])/2);
+  for(let i=0;i<n;i++){
+    const x1=(i+1)*segW;
+    const top1=(H-bh[i+1])/2;
+    const top0=(H-bh[i])/2;
+    const mx=i*segW+(segW/2);
+    ctx.bezierCurveTo(mx,top0,mx,top1,x1,top1);
+  }
+  ctx.lineTo(W,(H+bh[n])/2);
+  for(let i=n-1;i>=0;i--){
+    const x0=i*segW;
+    const bot0=(H+bh[i])/2;
+    const bot1=(H+bh[i+1])/2;
+    const mx=i*segW+(segW/2);
+    ctx.bezierCurveTo(mx,bot1,mx,bot0,x0,bot0);
+  }
+  ctx.closePath();
+
+  /* ── Gradient: light lavender → vivid magenta (exact screenshot match) ── */
+  const grad=ctx.createLinearGradient(0,0,W,0);
+  grad.addColorStop(0,'rgba(196,181,253,0.85)');    // #C4B5FD light lavender
+  grad.addColorStop(0.22,'rgba(167,139,250,0.88)'); // #A78BFA
+  grad.addColorStop(0.44,'rgba(139,92,246,0.91)');  // #8B5CF6 mid purple
+  grad.addColorStop(0.65,'rgba(124,58,237,0.93)');  // #7C3AED deep purple
+  grad.addColorStop(0.82,'rgba(168,85,247,0.95)');  // #A855F7 vivid purple
+  grad.addColorStop(1,'rgba(192,38,211,0.97)');     // #C026D3 bright magenta ← screenshot end
+  ctx.fillStyle=grad;
+  ctx.fill();
+
+  /* ── Hover highlight ── */
+  if(hoveredStageIdx>=0){
+    const hi=hoveredStageIdx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(hi*segW,0,segW,H);
+    ctx.clip();
+    ctx.fillStyle='rgba(255,255,255,0.10)';
+    ctx.fillRect(hi*segW,0,segW,H);
+    ctx.restore();
+  }
+
+  /* ── Vertical dividers ── */
+  for(let i=1;i<n;i++){
+    const x=i*segW;
+    ctx.beginPath();
+    ctx.moveTo(x,0); ctx.lineTo(x,H);
+    ctx.strokeStyle='rgba(255,255,255,0.22)';
+    ctx.lineWidth=1;
+    ctx.setLineDash([]);
+    ctx.stroke();
+  }
+
+  /* ── Value labels (large, centered in each segment) ── */
+  stages.forEach((s,i)=>{
+    const cx=(i+0.5)*segW;
+    const cy=H/2;
+    const label=fmtVal(s.value);
+    /* Shadow for readability */
+    ctx.shadowColor='rgba(0,0,0,0.5)';
+    ctx.shadowBlur=6;
+    ctx.font=`700 16px 'DM Sans',sans-serif`;
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillStyle='rgba(255,255,255,0.95)';
+    ctx.fillText(label,cx,cy);
+    ctx.shadowBlur=0;
+  });
+}
+
+/* ── Highlight stage card + redraw ── */
+function highlightStage(idx){
+  hoveredStageIdx=idx;
+  drawFunnelStream(document.getElementById('funnelView').value);
+}
+
+/* ── Canvas hover → tooltip ── */
+(function(){
+  const canvas=document.getElementById('funnelStreamCanvas');
+  if(!canvas)return;
+  const tooltip=document.getElementById('funnelTooltip');
+
+  canvas.addEventListener('mousemove',function(e){
+    const rect=canvas.getBoundingClientRect();
+    const x=e.clientX-rect.left;
+    const W=rect.width;
+    const n=FUNNEL_STAGES.length;
+    const segW=W/n;
+    const idx=Math.min(n-1,Math.floor(x/segW));
+    const s=FUNNEL_STAGES[idx];
+    const maxVal=FUNNEL_STAGES[0].value;
+    const drop=idx>0?Math.round((1-s.value/FUNNEL_STAGES[idx-1].value)*1000)/10:0;
+
+    document.getElementById('ft-name').textContent=s.name.replace('\n',' ');
+    document.getElementById('ft-vol').textContent=fmtVal(s.value);
+    document.getElementById('ft-pct').textContent=Math.round((s.value/maxVal)*100)+'% of traffic';
+    document.getElementById('ft-drop').textContent=idx>0?(drop>0?'−'+drop+'%':'—'):'Entry stage';
+
+    /* Position tooltip */
+    let tx=e.clientX-rect.left+16;
+    if(tx+160>W) tx=e.clientX-rect.left-170;
+    const ty=Math.max(0,e.clientY-rect.top-50);
+    tooltip.style.left=tx+'px';
+    tooltip.style.top=ty+'px';
+    tooltip.style.opacity='1';
+
+    /* Highlight */
+    if(hoveredStageIdx!==idx){
+      hoveredStageIdx=idx;
+      drawFunnelStream(document.getElementById('funnelView').value);
+    }
+  });
+
+  canvas.addEventListener('mouseleave',function(){
+    tooltip.style.opacity='0';
+    hoveredStageIdx=-1;
+    drawFunnelStream(document.getElementById('funnelView').value);
+  });
+})();
+
+/* ══════════════════════════════════════════════════
+   DRILL-DOWN MODAL DATA
+══════════════════════════════════════════════════ */
+const DRILL={
+  'units-sold':{
+    name:'Units Sold',icon:'📦',iconBg:'rgba(0,200,150,0.12)',
+    stats:[{label:'Units Sold',value:'1.24L',sub:'Last 30 days'},{label:'vs Last Period',value:'+17,800',sub:'↑ 15.7% more units',color:'#00C896'},{label:'Avg per Day',value:'4,133',sub:'Daily run rate'}],
+    chartTitle:'Weekly Units Sold Trend',chartSub:'How many units sold each week',
+    chartType:'bar',
+    chartData:{labels:['Wk 1','Wk 2','Wk 3','Wk 4'],datasets:[{label:'Units',data:[28400,30200,32100,33700],backgroundColor:'rgba(0,200,150,0.7)',borderRadius:6,borderSkipped:false}]},
+    chartOpts:{},
+    breakdown:{title:'Units by Category',cols:['Category','Units','Share','AOV'],rows:[
+      ['Subscription Box','52,400','42%',{label:'₹420',cls:'mbadge-green'}],
+      ['One-time Purchase','38,200','31%',{label:'₹286',cls:'mbadge-blue'}],
+      ['Add-ons & Extras','24,100','19%',{label:'₹198',cls:'mbadge-blue'}],
+      ['Bundles','9,700','8%',{label:'₹612',cls:'mbadge-green'}],
+    ],bars:[{name:'Subscription Box',val:'52,400',pct:100,color:'#00C896'},{name:'One-time',val:'38,200',pct:73,color:'#7B6EF6'},{name:'Add-ons',val:'24,100',pct:46,color:'#3D9CF5'},{name:'Bundles',val:'9,700',pct:19,color:'#F5A623'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Subscription units up 18.3% MoM</strong> — fastest growing category. Bundles have the highest AOV at ₹612, nearly 2x the overall average.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Add-ons growing slowly at 6% MoM</strong> despite being a high-margin category. These are likely not being surfaced at the right moment in the purchase journey.'},
+      {type:'action',tag:'💡 Action',text:'Add cross-sell prompts at cart stage for add-ons. <strong>Even a 10% attach rate would add ₹2.4L in monthly revenue</strong> at the current order volume.'},
+    ]
+  },
+  'aov':{
+    name:'Avg Order Value (AOV)',icon:'🛒',iconBg:'rgba(123,110,246,0.12)',
+    stats:[{label:'Current AOV',value:'₹346',sub:'Last 30 days'},{label:'vs Last Month',value:'+₹28',sub:'↑ 8.8% increase',color:'#00C896'},{label:'Target AOV',value:'₹400',sub:'85% of target',color:'#F5A623'}],
+    chartTitle:'AOV Trend — Monthly',chartSub:'Average order value growing consistently',
+    chartType:'line',
+    chartData:{labels:['Jan','Feb','Mar','Apr'],datasets:[{label:'AOV',data:[296,308,318,346],borderColor:'#7B6EF6',backgroundColor:'rgba(123,110,246,0.08)',tension:0.4,pointRadius:5,pointBackgroundColor:'#7B6EF6',fill:true},{label:'Target',data:[400,400,400,400],borderColor:'rgba(245,166,35,0.4)',borderDash:[5,4],pointRadius:0}]},
+    chartOpts:{scales:{y:{min:260,max:430,ticks:{callback:v=>'₹'+v}}}},
+    breakdown:{title:'AOV by Channel',cols:['Channel','AOV','vs Overall','Trend'],rows:[
+      ['Direct','₹412','+₹66',{label:'↑ highest',cls:'mbadge-green'}],
+      ['Paid','₹368','+₹22',{label:'↑ above avg',cls:'mbadge-green'}],
+      ['Organic','₹340','−₹6',{label:'→ stable',cls:'mbadge-blue'}],
+      ['Social','₹218','−₹128',{label:'↓ lowest',cls:'mbadge-red'}],
+      ['Referral','₹294','−₹52',{label:'→ stable',cls:'mbadge-blue'}],
+    ],bars:[{name:'Direct ₹412',val:'Highest',pct:100,color:'#00C896'},{name:'Paid ₹368',val:'Above avg',pct:89,color:'#7B6EF6'},{name:'Organic ₹340',val:'Average',pct:83,color:'#3D9CF5'},{name:'Social ₹218',val:'Lowest',pct:53,color:'#FF4D6A'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>AOV grew ₹28 (8.8%) in one month</strong> — highest single-month AOV growth in 2025. Bundle purchases are driving this up. Direct channel customers have the highest intent and spend ₹412 per order.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Social channel AOV at ₹218 is 37% below average.</strong> Social is attracting low-value impulse buyers. Unless we can increase basket size from social, the channel may not justify spend.'},
+      {type:'action',tag:'💡 Action',text:'Add minimum order threshold for free shipping at ₹399. <strong>This nudge typically lifts AOV by 10–15%</strong>, pushing toward the ₹400 target without heavy discounting.'},
+    ]
+  },
+  'total-orders':{
+    name:'Total Orders',icon:'📋',iconBg:'rgba(61,156,245,0.12)',
+    stats:[{label:'Total Orders',value:'25,145',sub:'Last 30 days'},{label:'vs Last Month',value:'+2,764',sub:'↑ 12.3% more orders',color:'#00C896'},{label:'Daily Avg',value:'838',sub:'Orders per day'}],
+    chartTitle:'Daily Orders Trend',chartSub:'Order volume by day of week pattern',
+    chartType:'bar',
+    chartData:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{label:'Orders',data:[720,798,760,875,824,1056,992],backgroundColor:'rgba(61,156,245,0.7)',borderRadius:6,borderSkipped:false}]},
+    chartOpts:{},
+    breakdown:{title:'Orders by Channel',cols:['Channel','Orders','Share','Avg Value'],rows:[
+      ['Paid','10,660','42.4%',{label:'₹368',cls:'mbadge-green'}],
+      ['Organic','6,033','24.0%',{label:'₹340',cls:'mbadge-blue'}],
+      ['Direct','5,029','20.0%',{label:'₹412',cls:'mbadge-green'}],
+      ['Social','2,012','8.0%',{label:'₹218',cls:'mbadge-red'}],
+      ['Referral','1,408','5.6%',{label:'₹294',cls:'mbadge-blue'}],
+    ],bars:[{name:'Paid',val:'10,660',pct:100,color:'#00C896'},{name:'Organic',val:'6,033',pct:57,color:'#7B6EF6'},{name:'Direct',val:'5,029',pct:47,color:'#3D9CF5'},{name:'Social',val:'2,012',pct:19,color:'#F5A623'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Weekends drive 40% more orders</strong> than weekdays (Sat avg 1,056 vs Mon avg 720). This is a strong signal to run flash sales or promotions on Friday evenings to capitalize.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Monday and Wednesday are consistently lowest</strong> volume days. Mid-week engagement is weak — email/push re-engagement campaigns on these days could smooth volume.'},
+      {type:'action',tag:'💡 Action',text:'Schedule email campaigns for Thursday evenings to trigger Friday/weekend orders. <strong>A 5% lift in weekly order volume = +1,257 orders/month = +₹4.3L revenue</strong> at current AOV.'},
+    ]
+  },
+  'subscribers':{
+    name:'Monthly Subscribers',icon:'🔔',iconBg:'rgba(245,166,35,0.12)',
+    stats:[{label:'Active Subscribers',value:'12,340',sub:'As of today'},{label:'Added This Month',value:'+1,840',sub:'Net new subscribers',color:'#00C896'},{label:'Churn (Subs)',value:'−420',sub:'Cancelled this month',color:'#FF4D6A'}],
+    chartTitle:'Subscriber Growth — Monthly',chartSub:'New subscribers vs cancellations each month',
+    chartType:'bar',
+    chartData:{labels:['Jan','Feb','Mar','Apr'],datasets:[
+      {label:'New Subs',data:[1240,1480,1620,1840],backgroundColor:'rgba(0,200,150,0.75)',borderRadius:5,borderSkipped:false},
+      {label:'Cancelled',data:[380,400,410,420],backgroundColor:'rgba(255,77,106,0.65)',borderRadius:5,borderSkipped:false}
+    ]},
+    chartOpts:{},
+    /* Source-wise subscriber data for filter */
+    sourceData:{
+      all:   {total:'12,340', added:'+1,840', churn:'−420', rows:[['Monthly Plan','7,404','60%',{label:'₹499/mo',cls:'mbadge-green'}],['Quarterly Plan','3,085','25%',{label:'₹449/mo',cls:'mbadge-green'}],['Annual Plan','1,851','15%',{label:'₹399/mo',cls:'mbadge-blue'}]], bars:[{name:'Monthly ₹499',val:'7,404 subs',pct:100,color:'#00C896'},{name:'Quarterly ₹449',val:'3,085 subs',pct:42,color:'#7B6EF6'},{name:'Annual ₹399',val:'1,851 subs',pct:25,color:'#3D9CF5'}]},
+      ott:   {total:'3,840',  added:'+620',  churn:'−98',  rows:[['Netflix Referral','1,240','32%',{label:'↑ +8%',cls:'mbadge-green'}],['Hotstar','980','25%',{label:'↑ +12%',cls:'mbadge-green'}],['Amazon Prime','840','22%',{label:'↑ +5%',cls:'mbadge-blue'}],['Sony LIV','480','12%',{label:'→ stable',cls:'mbadge-blue'}],['Others OTT','300','8%',{label:'↓ -2%',cls:'mbadge-red'}]], bars:[{name:'Netflix',val:'1,240',pct:100,color:'#FF4D6A'},{name:'Hotstar',val:'980',pct:79,color:'#1B74E4'},{name:'Amazon',val:'840',pct:68,color:'#F5A623'},{name:'Sony LIV',val:'480',pct:39,color:'#7B6EF6'},{name:'Others',val:'300',pct:24,color:'#8B87A8'}]},
+      social:{total:'2,980',  added:'+440',  churn:'−110', rows:[['Instagram','1,120','37%',{label:'↑ +18%',cls:'mbadge-green'}],['YouTube','840','28%',{label:'↑ +9%',cls:'mbadge-green'}],['Facebook','620','21%',{label:'↓ -4%',cls:'mbadge-red'}],['Twitter/X','280','9%',{label:'↓ -11%',cls:'mbadge-red'}],['LinkedIn','120','4%',{label:'→ stable',cls:'mbadge-blue'}]], bars:[{name:'Instagram',val:'1,120',pct:100,color:'#E1306C'},{name:'YouTube',val:'840',pct:75,color:'#FF4D6A'},{name:'Facebook',val:'620',pct:55,color:'#3D9CF5'},{name:'Twitter/X',val:'280',pct:25,color:'#8B87A8'},{name:'LinkedIn',val:'120',pct:11,color:'#0A66C2'}]},
+      paid:  {total:'2,460',  added:'+380',  churn:'−92',  rows:[['Google Ads','980','40%',{label:'CAC ₹154',cls:'mbadge-green'}],['Meta Ads','740','30%',{label:'CAC ₹181',cls:'mbadge-blue'}],['YouTube Ads','420','17%',{label:'CAC ₹165',cls:'mbadge-blue'}],['Others','320','13%',{label:'CAC ₹210',cls:'mbadge-amber'}]], bars:[{name:'Google Ads',val:'980',pct:100,color:'#00C896'},{name:'Meta Ads',val:'740',pct:76,color:'#7B6EF6'},{name:'YouTube Ads',val:'420',pct:43,color:'#FF4D6A'},{name:'Others',val:'320',pct:33,color:'#F5A623'}]},
+      direct:{total:'1,820',  added:'+220',  churn:'−68',  rows:[['Direct Website','920','50%',{label:'Organic',cls:'mbadge-green'}],['App Store','540','30%',{label:'Organic',cls:'mbadge-green'}],['Word of Mouth','360','20%',{label:'Referral',cls:'mbadge-blue'}]], bars:[{name:'Direct Web',val:'920',pct:100,color:'#00C896'},{name:'App Store',val:'540',pct:59,color:'#3D9CF5'},{name:'Word of Mouth',val:'360',pct:39,color:'#7B6EF6'}]},
+      referral:{total:'1,240',added:'+180', churn:'−52',  rows:[['Existing Sub Referral','640','52%',{label:'Best CAC',cls:'mbadge-green'}],['Influencer','380','31%',{label:'CAC ₹180',cls:'mbadge-blue'}],['Affiliate','220','18%',{label:'CAC ₹195',cls:'mbadge-amber'}]], bars:[{name:'Sub Referral',val:'640',pct:100,color:'#00C896'},{name:'Influencer',val:'380',pct:59,color:'#7B6EF6'},{name:'Affiliate',val:'220',pct:34,color:'#F5A623'}]},
+    },
+    breakdown:{title:'Subscriber Plan Breakdown',cols:['Plan','Subscribers','Share','Rev/Month'],rows:[
+      ['Monthly Plan','7,404','60%',{label:'₹499/mo',cls:'mbadge-green'}],
+      ['Quarterly Plan','3,085','25%',{label:'₹449/mo',cls:'mbadge-green'}],
+      ['Annual Plan','1,851','15%',{label:'₹399/mo',cls:'mbadge-blue'}],
+    ],bars:[{name:'Monthly ₹499',val:'7,404 subs',pct:100,color:'#00C896'},{name:'Quarterly ₹449',val:'3,085 subs',pct:42,color:'#7B6EF6'},{name:'Annual ₹399',val:'1,851 subs',pct:25,color:'#3D9CF5'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>OTT partnerships driving 31% of all new subscribers</strong> — Netflix + Hotstar alone contribute 1,220 subs/month. This is the fastest-growing acquisition channel with strong intent users.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Only 15% on annual plans</strong> — these are the stickiest customers (lowest churn). Annual subscribers represent 2.5x more lifetime value. Monthly → Annual conversion needs attention.'},
+      {type:'action',tag:'💡 Action',text:'Double down on OTT partnerships. <strong>Adding 2 more OTT integrations could add +800 subs/month at low CAC.</strong> Also offer annual plan upgrade at month 3 to lock in revenue.'},
+    ]
+  },
+  'repeat-rate':{
+    name:'Repeat Purchase Rate',icon:'💫',iconBg:'rgba(0,200,150,0.12)',
+    stats:[{label:'Repeat Rate',value:'34.2%',sub:'Customers with 2+ orders'},{label:'vs Last Month',value:'+3.1pp',sub:'Steadily improving',color:'#00C896'},{label:'Industry Avg',value:'25–30%',sub:'D2C benchmark',color:'#00C896'}],
+    chartTitle:'Repeat Purchase Rate Trend',chartSub:'% of customers who buy more than once — rising is healthy',
+    chartType:'line',
+    chartData:{labels:['Jan','Feb','Mar','Apr'],datasets:[{label:'Repeat Rate %',data:[28.4,30.1,31.8,34.2],borderColor:'#00C896',backgroundColor:'rgba(0,200,150,0.08)',tension:0.4,pointRadius:5,pointBackgroundColor:'#00C896',fill:true},{label:'Industry Avg',data:[27.5,27.5,27.5,27.5],borderColor:'rgba(61,156,245,0.4)',borderDash:[5,4],pointRadius:0}]},
+    chartOpts:{scales:{y:{min:20,max:45,ticks:{callback:v=>v+'%'}}}},
+    breakdown:{title:'Repeat Rate by Cohort',cols:['Cohort','1st Order Month','Repeat Rate','Avg Orders'],rows:[
+      ['Jan Cohort','January','38.4%',{label:'2.8 orders avg',cls:'mbadge-green'}],
+      ['Feb Cohort','February','35.1%',{label:'2.5 orders avg',cls:'mbadge-green'}],
+      ['Mar Cohort','March','28.6%',{label:'2.1 orders avg',cls:'mbadge-blue'}],
+      ['Apr Cohort','April','12.2%',{label:'1.1 orders avg',cls:'mbadge-amber'}],
+    ],bars:[{name:'Jan Cohort 38.4%',val:'2.8x avg',pct:100,color:'#00C896'},{name:'Feb Cohort 35.1%',val:'2.5x avg',pct:91,color:'#00C896'},{name:'Mar Cohort 28.6%',val:'2.1x avg',pct:74,color:'#3D9CF5'},{name:'Apr Cohort 12.2%',val:'1.1x avg',pct:32,color:'#F5A623'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>34.2% repeat rate is above the D2C industry average of 25–30%.</strong> Older cohorts showing strong loyalty — January customers averaging 2.8 orders. Product-market fit is strong.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>April cohort at only 12.2% repeat rate</strong> so far — but it\'s early. Watch carefully over next 60 days. If it doesn\'t reach 25%+ by month 3, early onboarding needs review.'},
+      {type:'action',tag:'💡 Action',text:'Send a "second purchase" discount to customers who haven\'t reordered within 30 days. <strong>Moving repeat rate from 34% to 40% would add +₹6.2L monthly revenue</strong> from existing customer base.'},
+    ]
+  },
+  'rev-per-sub':{
+    name:'Revenue per Subscriber',icon:'💰',iconBg:'rgba(123,110,246,0.12)',
+    stats:[{label:'Rev / Subscriber',value:'₹182',sub:'Monthly average'},{label:'vs Last Month',value:'+₹14',sub:'↑ 8.3% increase',color:'#00C896'},{label:'Total Sub Revenue',value:'₹22.5L',sub:'12,340 × ₹182',color:'#00C896'}],
+    chartTitle:'Revenue per Subscriber — Monthly Trend',chartSub:'Increasing means subscribers are buying more over time',
+    chartType:'line',
+    chartData:{labels:['Jan','Feb','Mar','Apr'],datasets:[{label:'₹ per Subscriber',data:[154,162,168,182],borderColor:'#7B6EF6',backgroundColor:'rgba(123,110,246,0.08)',tension:0.4,pointRadius:5,pointBackgroundColor:'#7B6EF6',fill:true}]},
+    chartOpts:{scales:{y:{min:130,max:220,ticks:{callback:v=>'₹'+v}}}},
+    breakdown:{title:'Revenue per Subscriber by Plan',cols:['Plan','Subscribers','Sub Revenue','Rev/Sub/Month'],rows:[
+      ['Monthly Plan','7,404','₹36.9L','₹499/mo'],
+      ['Quarterly Plan','3,085','₹13.9L','₹449/mo'],
+      ['Annual Plan','1,851','₹7.4L','₹399/mo'],
+    ],bars:[{name:'Monthly ₹499',val:'₹36.9L total',pct:100,color:'#7B6EF6'},{name:'Quarterly ₹449',val:'₹13.9L total',pct:90,color:'#3D9CF5'},{name:'Annual ₹399',val:'₹7.4L total',pct:80,color:'#00C896'}]},
+    insights:[
+      {type:'win',tag:'✅ Win',text:'<strong>Revenue per subscriber growing ₹28 over 4 months</strong> (+22%). Subscribers are not just renewing — they\'re buying add-ons. This is the sign of a healthy subscription product.'},
+      {type:'risk',tag:'⚠ Risk',text:'<strong>Annual plan subscribers generate ₹100 less per month</strong> than monthly plan subscribers. While they have lower churn, the revenue concentration in monthly plans creates volatility risk.'},
+      {type:'action',tag:'💡 Action',text:'Create an add-on marketplace exclusively for subscribers. <strong>Even ₹50/month in add-on revenue per subscriber adds ₹6.2L/month</strong> to subscription revenue at current subscriber count.'},
+    ]
+  }
+};
+
+/* ══════════════════════════════════════════════════
+   MODAL ENGINE
+══════════════════════════════════════════════════ */
+let activeChart=null;
+let subSource='all'; // tracks current subscriber source filter
+
+function renderSubBreakdown(id, source){
+  const d=DRILL[id];
+  if(!d||!d.sourceData)return;
+  const sd=d.sourceData[source]||d.sourceData.all;
+  /* Update the 3 stat cards */
+  const statEls=document.querySelectorAll('.mstat');
+  if(statEls[0]) statEls[0].querySelector('.mstat-val').textContent=sd.total;
+  if(statEls[1]) statEls[1].querySelector('.mstat-val').textContent=sd.added;
+  if(statEls[2]) statEls[2].querySelector('.mstat-val').textContent=sd.churn;
+  /* Update breakdown table */
+  const bk=d.breakdown;
+  const tableBody=document.getElementById('sub-breakdown-tbody');
+  const barsEl=document.getElementById('sub-breakdown-bars');
+  if(tableBody){
+    tableBody.innerHTML=sd.rows.map(r=>`<tr>${r.map(cell=>typeof cell==='object'?`<td><span class="mbadge ${cell.cls}">${cell.label}</span></td>`:`<td>${cell}</td>`).join('')}</tr>`).join('');
+  }
+  if(barsEl){
+    barsEl.innerHTML=sd.bars.map(b=>`
+      <div class="prog-item">
+        <div class="prog-top"><span class="prog-name">${b.name}</span><span class="prog-val">${b.val}</span></div>
+        <div class="prog-track"><div class="prog-fill" style="width:${b.pct}%;background:${b.color}"></div></div>
+      </div>`).join('');
+  }
+}
+
+function openModal(id){
+  const d=DRILL[id]; if(!d)return;
+  subSource='all';
+  const overlay=document.getElementById('drill-overlay');
+  const modal=document.getElementById('drill-modal');
+  const periods=[{k:'today',l:'Today'},{k:'7d',l:'7D'},{k:'30d',l:'30D'},{k:'mtd',l:'MTD'},{k:'ytd',l:'YTD'}];
+  const statsHtml=d.stats.map(s=>`
+    <div class="mstat">
+      <div class="mstat-lbl">${s.label}</div>
+      <div class="mstat-val" style="${s.color?'color:'+s.color:''}">${s.value}</div>
+      <div class="mstat-sub">${s.sub}</div>
+    </div>`).join('');
+  const bk=d.breakdown;
+
+  /* Special subscriber source filter UI */
+  const subFilterHtml = id==='subscribers' ? `
+    <div style="padding:0 24px 16px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+        📡 Filter Subscribers by Acquisition Source
+        <span style="font-size:9px;font-weight:500;color:var(--text-3);text-transform:none;letter-spacing:0">Click a source to filter all data below</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${[
+          {k:'all',    l:'🌐 All Sources', count:'12,340', color:'var(--green)'},
+          {k:'ott',    l:'📺 OTT Platforms', count:'3,840', color:'#E50914'},
+          {k:'social', l:'📱 Social Media', count:'2,980', color:'#E1306C'},
+          {k:'paid',   l:'💰 Paid Ads', count:'2,460', color:'var(--purple)'},
+          {k:'direct', l:'🔗 Direct / Organic', count:'1,820', color:'var(--blue)'},
+          {k:'referral',l:'🤝 Referral', count:'1,240', color:'var(--amber)'},
+        ].map(s=>`
+          <button id="sub-src-${s.k}" onclick="subSource='${s.k}';document.querySelectorAll('[id^=sub-src-]').forEach(b=>{b.style.background='var(--bg-elevated)';b.style.borderColor='var(--border)';b.style.color='var(--text-2)'});this.style.background='${s.color}22';this.style.borderColor='${s.color}';this.style.color='${s.color}';renderSubBreakdown('${id}','${s.k}')"
+            style="padding:6px 12px;border-radius:var(--r-sm);font-size:11px;font-weight:500;background:${s.k==='all'?'rgba(0,200,150,0.12)':'var(--bg-elevated)'};border:1px solid ${s.k==='all'?'rgba(0,200,150,0.3)':'var(--border)'};color:${s.k==='all'?'var(--green)':'var(--text-2)'};cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;align-items:flex-start;gap:1px">
+            <span>${s.l}</span>
+            <span style="font-size:9px;font-family:'DM Mono',monospace;opacity:0.8">${s.count} subs</span>
+          </button>`).join('')}
+      </div>
+    </div>
+    <div class="modal-divider"></div>` : '';
+
+  const tableHtml=`<table class="modal-table"><thead><tr>${bk.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead><tbody id="${id==='subscribers'?'sub-breakdown-tbody':'modal-tbody-'+id}">
+    ${bk.rows.map(r=>`<tr>${r.map(cell=>typeof cell==='object'?`<td><span class="mbadge ${cell.cls}">${cell.label}</span></td>`:`<td>${cell}</td>`).join('')}</tr>`).join('')}
+  </tbody></table>`;
+  const barsHtml=`<div class="prog-row" id="${id==='subscribers'?'sub-breakdown-bars':'modal-bars-'+id}">${bk.bars.map(b=>`
+    <div class="prog-item">
+      <div class="prog-top"><span class="prog-name">${b.name}</span><span class="prog-val">${b.val}</span></div>
+      <div class="prog-track"><div class="prog-fill" style="width:${b.pct}%;background:${b.color}"></div></div>
+    </div>`).join('')}</div>`;
+  const insightHtml=d.insights.map(i=>`
+    <div class="modal-iitem">
+      <div class="modal-itag ${i.type==='win'?'itag-win':i.type==='risk'?'itag-risk':'itag-action'}">${i.tag}</div>
+      <div class="modal-itext">${i.text}</div>
+    </div>`).join('');
+
+  modal.innerHTML=`
+    <div class="modal-hdr">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="modal-icon" style="background:${d.iconBg}">${d.icon}</div>
+        <div><div class="modal-name">${d.name}</div><div class="modal-sub">Drill-down · Revenue & Sales</div></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-period-row">
+      <div class="mpicker">${periods.map(p=>`<button class="mpb ${p.k===currentPeriod?'active':''}" onclick="this.closest('.mpicker').querySelectorAll('.mpb').forEach(b=>b.classList.remove('active'));this.classList.add('active')">${p.l}</button>`).join('')}</div>
+      <span style="font-size:10px;color:var(--text-3)">Switching period updates top stats</span>
+    </div>
+    <div class="modal-stats">${statsHtml}</div>
+    <div class="modal-divider"></div>
+    ${subFilterHtml}
+    <div class="modal-chart-sec">
+      <div class="modal-chart-title">${d.chartTitle}</div>
+      <div class="modal-chart-sub">${d.chartSub}</div>
+      <div class="modal-chart-wrap"><canvas id="modal-chart"></canvas></div>
+      <div class="chart-legend" style="margin-top:10px">
+        ${d.chartData.datasets.map(ds=>`<div class="cl-item"><span class="cl-dot" style="background:${ds.borderColor||ds.backgroundColor}"></span>${ds.label}</div>`).join('')}
+      </div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-two-col">
+      <div class="modal-col-card"><div class="modal-col-title">${id==='subscribers'?'Breakdown by Selected Source':''+bk.title}</div>${tableHtml}</div>
+      <div class="modal-col-card"><div class="modal-col-title">Visual Breakdown</div>${barsHtml}</div>
+    </div>
+    <div class="modal-divider"></div>
+    <div class="modal-insight">
+      <div class="modal-insight-hdr"><div class="modal-insight-badge">🧠 AI Insight</div><span style="font-size:10px;color:var(--text-3)">Based on ${d.name} data</span></div>
+      <div class="modal-insight-grid">${insightHtml}</div>
+    </div>`;
+
+  overlay.classList.add('open');
+  document.body.style.overflow='hidden';
+  requestAnimationFrame(()=>{
+    if(activeChart)activeChart.destroy();
+    const ctx=document.getElementById('modal-chart');
+    if(!ctx)return;
+    const extraY=d.chartOpts?.scales?.y||{};
+    activeChart=new Chart(ctx,{
+      type:d.chartType,data:d.chartData,
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{...tip}},
+        scales:{
+          y:{grid:{color:gc},ticks:{color:tc,font:{size:10},...(extraY.ticks||{})},border:{display:false},...(extraY.min!==undefined?{min:extraY.min}:{}), ...(extraY.max!==undefined?{max:extraY.max}:{})},
+          x:{grid:{color:gc},ticks:{color:tc,font:{size:10}},border:{display:false}}
+        }
+      }
+    });
+  });
+}
+function closeModal(e){
+  if(e&&e.target!==document.getElementById('drill-overlay'))return;
+  document.getElementById('drill-overlay').classList.remove('open');
+  document.body.style.overflow='';
+  if(activeChart){activeChart.destroy();activeChart=null;}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+renderCards();
+updateRevChart();
+renderFunnel();
+window.addEventListener('resize',()=>drawFunnelStream(document.getElementById('funnelView').value));
+</script>
+</body>
+</html>
